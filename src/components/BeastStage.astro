@@ -1,0 +1,128 @@
+---
+import { Image } from "astro:assets";
+import ParticleField from "./ParticleField.astro";
+import type { LocalizedBeast } from "@/data/beasts";
+
+interface Props {
+  beast: LocalizedBeast;
+  expanded?: boolean;
+  particleCount?: number;
+}
+const { beast, expanded = false, particleCount = 36 } = Astro.props;
+---
+
+<section
+  class:list={["stage", { expanded }]}
+  data-beast={beast.id}
+  style={`--c-aura:${beast.palette.aura};--c-deep:${beast.palette.deep};--c-glow:${beast.palette.glow};--c-ink:${beast.palette.ink};--g1:${beast.palette.gradient[0]};--g2:${beast.palette.gradient[1]};--g3:${beast.palette.gradient[2]};--c-surface:${beast.palette.surface};`}
+>
+  <div class="atmos" aria-hidden="true"></div>
+  <ParticleField kind={beast.particle} count={particleCount} className="stage-particles" />
+
+  <div class="portrait beast-tilt">
+    <Image
+      src={beast.image}
+      alt={beast.displayName}
+      width={720}
+      height={720}
+      densities={[1, 1.5, 2]}
+      decoding="async"
+      loading="eager"
+    />
+    <span class="beast-shadow"></span>
+  </div>
+</section>
+
+<style>
+  .stage {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    border-radius: var(--radius-soft);
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .stage.expanded { aspect-ratio: 1 / 1; }
+
+  .atmos {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background:
+      radial-gradient(60% 50% at 50% 30%, var(--c-glow) 0%, transparent 60%),
+      radial-gradient(120% 80% at 50% 100%, var(--c-deep) 0%, transparent 70%),
+      linear-gradient(180deg, var(--c-aura) 0%, var(--c-deep) 100%);
+    opacity: 0.85;
+    animation: breathe 9s ease-in-out infinite;
+  }
+
+  .stage-particles {
+    z-index: 1;
+  }
+
+  .portrait {
+    position: relative;
+    z-index: 2;
+    width: 80%;
+    height: 80%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    transition: transform 0.6s var(--ease-silk);
+  }
+
+  .portrait img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: bottom;
+    filter: drop-shadow(0 22px 32px rgba(0, 0, 0, 0.55));
+    transition: transform 0.6s var(--ease-silk);
+  }
+
+  .stage:hover .portrait img {
+    transform: translateY(-10px) scale(1.04);
+  }
+</style>
+
+<script>
+  const stages = document.querySelectorAll<HTMLElement>(".stage");
+  if (window.matchMedia("(hover: hover)").matches) {
+    stages.forEach((stage) => {
+      const tilt = stage.querySelector<HTMLElement>(".beast-tilt");
+      if (!tilt) return;
+      let raf = 0;
+      stage.addEventListener("pointermove", (e) => {
+        const r = stage.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - 0.5;
+        const y = (e.clientY - r.top) / r.height - 0.5;
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(() => {
+          tilt.style.transform = `perspective(900px) rotateX(${(-y * 6).toFixed(2)}deg) rotateY(${(x * 9).toFixed(2)}deg) translateZ(0)`;
+        });
+      });
+      const reset = () => {
+        cancelAnimationFrame(raf);
+        tilt.style.transform = "";
+      };
+      stage.addEventListener("pointerleave", reset);
+    });
+  }
+
+  if ("DeviceOrientationEvent" in window && /Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+    let last = performance.now();
+    window.addEventListener("deviceorientation", (e) => {
+      const now = performance.now();
+      if (now - last < 50) return;
+      last = now;
+      const beta = (e.beta ?? 0) / 90;
+      const gamma = (e.gamma ?? 0) / 90;
+      document.querySelectorAll<HTMLElement>(".stage .beast-tilt").forEach((tilt) => {
+        tilt.style.transform = `perspective(900px) rotateX(${(beta * -4).toFixed(2)}deg) rotateY(${(gamma * 6).toFixed(2)}deg)`;
+      });
+    });
+  }
+</script>

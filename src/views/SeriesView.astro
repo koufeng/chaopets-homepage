@@ -1,0 +1,201 @@
+---
+import Base from "@/layouts/Base.astro";
+import SectionHeading from "@/components/SectionHeading.astro";
+import BeastCard from "@/components/BeastCard.astro";
+import { Image } from "astro:assets";
+import { beasts, groupShot, localizeBeast } from "@/data/beasts";
+import { getDict, localizedPath } from "@/i18n";
+import type { Locale } from "@/i18n/types";
+
+interface Props {
+  lang: Locale;
+}
+const { lang } = Astro.props;
+const t = getDict(lang);
+
+const localized = beasts.map((b) => localizeBeast(b, lang));
+const lulumartUrl = import.meta.env.PUBLIC_LULUMART_URL || "https://lulumart.app";
+---
+
+<Base
+  lang={lang}
+  title={t.meta.seriesTitle}
+  description={t.meta.seriesDesc}
+  pageId="series"
+  logicalPath="/series"
+>
+  <section class="scene series-hero">
+    <div class="wrap series-hero-grid">
+      <div class="copy fade-up">
+        <SectionHeading
+          eyebrow={t.series.eyebrow}
+          title={t.series.title}
+          description={t.series.desc}
+          as="h1"
+        />
+        <ul class="bullets">
+          {t.series.bullets.map((b) => (
+            <li><span class="dot"></span>{b}</li>
+          ))}
+        </ul>
+        <div class="actions">
+          <a
+            href={lulumartUrl}
+            rel="noopener"
+            target="_blank"
+            class="btn btn-primary"
+            data-event="series_outlink"
+          >
+            {t.series.ctaPrimary}
+            <span aria-hidden="true">↗</span>
+          </a>
+          <a href={localizedPath("/beasts", lang)} class="btn btn-ghost">{t.series.ctaSecondary}</a>
+        </div>
+      </div>
+      <figure class="art fade-up">
+        <Image
+          src={groupShot}
+          alt={t.series.caption}
+          width={1200}
+          height={580}
+          densities={[1, 1.5, 2]}
+          loading="eager"
+          decoding="async"
+        />
+        <figcaption>{t.series.caption}</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="scene series-list">
+    <div class="wrap">
+      <SectionHeading
+        eyebrow={t.series.lineupEyebrow}
+        title={t.series.lineupTitle}
+        description={t.series.lineupDesc}
+        align="center"
+      />
+      <div class="grid">
+        {localized.map((beast) => (
+          <BeastCard beast={beast} lang={lang} size="md" />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="scene future-cta fade-up">
+    <div class="wrap future-inner">
+      <p class="eyebrow">{t.series.futureEyebrow}</p>
+      <h2 class="future-title">
+        {t.series.futureTitle1}<br />{t.series.futureTitle2}
+      </h2>
+      <p class="future-tag">
+        {t.series.futureTag1}
+        <br />{t.series.futureTag2}
+      </p>
+      <a
+        href={lulumartUrl}
+        rel="noopener"
+        target="_blank"
+        class="btn btn-primary"
+        data-event="series_future_outlink"
+      >
+        {t.series.futureCta}
+      </a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .series-hero { padding-block: 6rem; }
+  .series-hero-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    align-items: center;
+  }
+  @media (min-width: 880px) {
+    .series-hero-grid { grid-template-columns: 1fr 1.05fr; gap: 5rem; }
+  }
+
+  .bullets {
+    list-style: none;
+    margin: 1rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    color: var(--color-cloud-dim);
+  }
+  .bullets li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    line-height: 1.7;
+  }
+  .bullets .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--color-yao);
+    box-shadow: 0 0 12px var(--color-yao);
+  }
+
+  .actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.6rem; }
+
+  .art {
+    margin: 0;
+    border-radius: var(--radius-soft);
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.005));
+    aspect-ratio: 16 / 9;
+    position: relative;
+  }
+  .art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .art figcaption {
+    position: absolute;
+    bottom: 1rem;
+    right: 1.2rem;
+    font-family: var(--font-display);
+    letter-spacing: 0.32em;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--color-cloud-dim);
+    opacity: 0.85;
+  }
+
+  .series-list { padding-block: 6rem; }
+  .grid {
+    display: grid;
+    gap: 1.4rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+  @media (min-width: 1100px) {
+    .grid { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  .future-cta {
+    padding-block: 8rem;
+    text-align: center;
+  }
+  .future-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2rem;
+    max-width: 38rem;
+    margin-inline: auto;
+  }
+  .future-title {
+    margin: 0.5rem 0 0;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    line-height: 1.4;
+  }
+  .future-tag { color: var(--color-cloud-dim); margin: 0; line-height: 1.85; }
+</style>

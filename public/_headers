@@ -1,0 +1,54 @@
+# 五行小兽官网 · 缓存与安全 headers
+# 适用于 Cloudflare Pages / Netlify。Vercel 会忽略本文件（用 vercel.json）。
+#
+# 规则：更具体的路径优先；本文件只在 /* 设安全相关 header（不冲突），
+# Cache-Control 全部放具体路径下，避免 host 端合并规则导致 header 拼接出错。
+
+# ---------- 全局安全 ----------
+/*
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+
+# ---------- Astro 哈希资源 · 永久不可变 ----------
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Workbox 编译产物（带哈希）
+/workbox-*.js
+  Cache-Control: public, max-age=31536000, immutable
+
+# ---------- 图标 / favicon · 30 天 ----------
+/icons/*
+  Cache-Control: public, max-age=2592000
+
+/favicon.svg
+  Cache-Control: public, max-age=2592000
+
+# ---------- OG / 分享卡 · 30 天 ----------
+/share/*
+  Cache-Control: public, max-age=2592000
+
+# ---------- Service Worker · 必须实时刷新 ----------
+# 这两个文件如果被长缓存，用户会卡在旧版 PWA 里
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+/registerSW.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+# ---------- PWA Manifest · 1 天 ----------
+/manifest.webmanifest
+  Cache-Control: public, max-age=86400
+  Content-Type: application/manifest+json; charset=utf-8
+
+# ---------- SEO 文件 · 1 小时 ----------
+/robots.txt
+  Cache-Control: public, max-age=3600
+
+/sitemap-index.xml
+  Cache-Control: public, max-age=3600
+
+/sitemap-*.xml
+  Cache-Control: public, max-age=3600

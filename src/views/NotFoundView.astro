@@ -1,0 +1,71 @@
+---
+import Base from "@/layouts/Base.astro";
+import { Image } from "astro:assets";
+import { groupShot } from "@/data/beasts";
+import { getDict, localizedPath } from "@/i18n";
+import type { Locale } from "@/i18n/types";
+
+interface Props {
+  lang: Locale;
+}
+const { lang } = Astro.props;
+const t = getDict(lang);
+---
+
+<Base
+  lang={lang}
+  title={t.meta.notFoundTitle}
+  description={t.meta.notFoundDesc}
+  pageId="404"
+>
+  <section class="lost">
+    <div class="wrap inner">
+      <p class="eyebrow">{t.notFound.eyebrow}</p>
+      <h1>{t.notFound.title}</h1>
+      <p class="meta">{t.notFound.meta}</p>
+      <div class="actions">
+        <a href={localizedPath("/", lang)} class="btn btn-primary">{t.notFound.ctaPrimary}</a>
+        <a href={localizedPath("/beasts", lang)} class="btn btn-ghost">{t.notFound.ctaSecondary}</a>
+      </div>
+      <figure class="art">
+        <Image
+          src={groupShot}
+          alt=""
+          width={1200}
+          height={580}
+          loading="lazy"
+          decoding="async"
+        />
+      </figure>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .lost { padding-block: 8rem 6rem; }
+  .inner {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.4rem;
+  }
+  h1 {
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    margin: 0.4rem 0 0;
+    letter-spacing: 0.04em;
+    text-wrap: balance;
+  }
+  .meta { color: var(--color-cloud-dim); margin: 0; }
+  .actions { display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center; margin-top: 0.6rem; }
+
+  .art {
+    margin: 3rem 0 0;
+    border-radius: var(--radius-soft);
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+    aspect-ratio: 16 / 9;
+    width: 100%;
+  }
+  .art img { width: 100%; height: 100%; object-fit: cover; }
+</style>

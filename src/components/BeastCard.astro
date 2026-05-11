@@ -1,0 +1,209 @@
+---
+import { Image } from "astro:assets";
+import type { LocalizedBeast } from "@/data/beasts";
+import type { Locale } from "@/i18n/types";
+import { localizedPath } from "@/i18n";
+
+interface Props {
+  beast: LocalizedBeast;
+  lang: Locale;
+  size?: "sm" | "md" | "lg";
+  href?: string;
+  showStory?: boolean;
+}
+
+const { beast, lang, size = "md", href, showStory = false } = Astro.props;
+const linkHref = href ?? localizedPath(`/beasts/${beast.id}`, lang);
+
+const dims =
+  size === "sm" ? 220 :
+  size === "lg" ? 540 : 360;
+---
+
+<a
+  class:list={["beast-card", `size-${size}`, `lang-${lang}`, "fade-up"]}
+  href={linkHref}
+  data-beast={beast.id}
+  data-event="beast_card_click"
+  style={`--c-aura:${beast.palette.aura};--c-deep:${beast.palette.deep};--c-glow:${beast.palette.glow};--c-ink:${beast.palette.ink};--g1:${beast.palette.gradient[0]};--g2:${beast.palette.gradient[1]};--g3:${beast.palette.gradient[2]};`}
+>
+  <div class="halo" aria-hidden="true"></div>
+  <div class="orb" aria-hidden="true">
+    <span class="glyph">{beast.glyph}</span>
+  </div>
+
+  <div class="beast-tilt portrait">
+    <Image
+      src={beast.image}
+      alt={`${beast.displayName} · ${beast.element}`}
+      width={dims}
+      height={dims}
+      densities={[1, 1.5, 2]}
+      loading="lazy"
+      decoding="async"
+    />
+    <span class="beast-shadow"></span>
+  </div>
+
+  <div class="meta">
+    <p class="eyebrow">{beast.element} · {beast.emotion}</p>
+    <h3 class="name">
+      {lang === "zh" ? (
+        <>
+          <span class="primary">{beast.nameZh}</span>
+          <span class="secondary">{beast.nameLatin}</span>
+        </>
+      ) : (
+        <>
+          <span class="primary">{beast.nameLatin}</span>
+          <span class="secondary">{beast.nameZh}</span>
+        </>
+      )}
+    </h3>
+    {showStory && <p class="signature">「{beast.signature}」</p>}
+  </div>
+</a>
+
+<style>
+  .beast-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 2rem 1.25rem 1.5rem;
+    border-radius: var(--radius-soft);
+    background: linear-gradient(165deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.08);
+    overflow: hidden;
+    isolation: isolate;
+    transition: transform 0.5s var(--ease-silk), border-color 0.5s var(--ease-silk), box-shadow 0.5s var(--ease-silk);
+  }
+
+  .beast-card:hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in oklab, var(--c-aura) 40%, transparent);
+    box-shadow: 0 24px 48px -28px color-mix(in oklab, var(--c-aura) 60%, transparent);
+  }
+
+  .halo {
+    position: absolute;
+    inset: -25%;
+    z-index: -1;
+    background: radial-gradient(closest-side, var(--c-glow) 0%, transparent 65%);
+    opacity: 0.18;
+    transition: opacity 0.6s var(--ease-silk), transform 0.6s var(--ease-silk);
+    transform: scale(0.9);
+  }
+  .beast-card:hover .halo { opacity: 0.4; transform: scale(1); }
+
+  .orb {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 38px;
+    height: 38px;
+    border-radius: 999px;
+    background: radial-gradient(circle at 30% 30%, var(--c-glow), var(--c-deep));
+    display: grid;
+    place-items: center;
+    color: var(--c-ink);
+    font-family: var(--font-serif);
+    font-size: 0.85rem;
+    box-shadow: 0 8px 18px -10px var(--c-aura);
+  }
+  .glyph { font-weight: 600; }
+
+  .portrait {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    margin-block: 0.5rem 1rem;
+    transition: transform 0.6s var(--ease-silk);
+  }
+  .portrait img {
+    position: relative;
+    z-index: 1;
+    width: 88%;
+    height: 88%;
+    object-fit: contain;
+    object-position: bottom;
+    filter: drop-shadow(0 16px 28px rgba(0, 0, 0, 0.5));
+    transition: transform 0.5s var(--ease-silk);
+  }
+  .beast-card:hover .portrait img { transform: translateY(-6px) scale(1.04); }
+
+  .meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .name {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    margin: 0;
+    font-size: 1.4rem;
+  }
+  .name .primary { letter-spacing: 0.3em; }
+  .lang-en .name .primary {
+    letter-spacing: 0.06em;
+    font-size: 1.6rem;
+    font-family: var(--font-display);
+  }
+  .name .secondary {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--color-cloud-dim);
+    opacity: 0.75;
+    letter-spacing: 0.18em;
+  }
+  .lang-en .name .secondary {
+    font-family: var(--font-serif);
+    font-style: normal;
+    letter-spacing: 0.32em;
+  }
+
+  .signature {
+    color: var(--color-cloud-dim);
+    margin: 0.4rem 0 0;
+    font-size: 0.92rem;
+    opacity: 0.85;
+  }
+
+  .size-sm { padding: 1.25rem 1rem 1rem; }
+  .size-sm .name { font-size: 1.05rem; }
+  .size-sm .orb { top: 0.7rem; right: 0.7rem; width: 28px; height: 28px; font-size: 0.7rem; }
+</style>
+
+<script>
+  const cards = document.querySelectorAll<HTMLElement>(".beast-card");
+  if (cards.length && window.matchMedia("(hover: hover)").matches) {
+    cards.forEach((card) => {
+      const tilt = card.querySelector<HTMLElement>(".beast-tilt");
+      if (!tilt) return;
+      let raf = 0;
+
+      card.addEventListener("pointermove", (e) => {
+        const r = card.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - 0.5;
+        const y = (e.clientY - r.top) / r.height - 0.5;
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(() => {
+          tilt.style.transform = `perspective(900px) rotateX(${(-y * 8).toFixed(2)}deg) rotateY(${(x * 10).toFixed(2)}deg)`;
+        });
+      });
+
+      const reset = () => {
+        cancelAnimationFrame(raf);
+        tilt.style.transform = "";
+      };
+      card.addEventListener("pointerleave", reset);
+      card.addEventListener("blur", reset, true);
+    });
+  }
+</script>

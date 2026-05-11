@@ -1,0 +1,16 @@
+---
+import BeastDetailView from "@/views/BeastDetailView.astro";
+import { beasts, isBeastId, type BeastId } from "@/data/beasts";
+
+export async function getStaticPaths() {
+  return beasts.map((b) => ({ params: { id: b.id } }));
+}
+
+const { id } = Astro.params;
+if (!id || !isBeastId(id)) {
+  return Astro.redirect("/beasts");
+}
+const beastId = id as BeastId;
+---
+
+<BeastDetailView lang="zh" beastId={beastId} />

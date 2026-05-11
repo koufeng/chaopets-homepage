@@ -1,0 +1,174 @@
+---
+import Base from "@/layouts/Base.astro";
+import SectionHeading from "@/components/SectionHeading.astro";
+import BeastCard from "@/components/BeastCard.astro";
+import { wuxingBeasts, specialBeasts, localizeBeast } from "@/data/beasts";
+import { getDict } from "@/i18n";
+import type { Locale } from "@/i18n/types";
+
+interface Props {
+  lang: Locale;
+}
+const { lang } = Astro.props;
+const t = getDict(lang);
+
+const wuxingLocalized = wuxingBeasts.map((b) => localizeBeast(b, lang));
+const specialLocalized = specialBeasts.map((b) => localizeBeast(b, lang));
+---
+
+<Base
+  lang={lang}
+  title={t.meta.beastsTitle}
+  description={t.meta.beastsDesc}
+  pageId="beasts"
+  logicalPath="/beasts"
+>
+  <section class="scene archive-hero">
+    <div class="wrap archive-hero-inner fade-up">
+      <SectionHeading
+        eyebrow={t.beasts.eyebrow}
+        title={t.beasts.title}
+        description={t.beasts.desc}
+        align="center"
+        as="h1"
+      />
+
+      <div class="filter" role="tablist" aria-label={t.beasts.eyebrow}>
+        <button class="chip is-active" data-filter="all"     role="tab" aria-selected="true">{t.beasts.filterAll}</button>
+        <button class="chip"           data-filter="wuxing"  role="tab" aria-selected="false">{t.beasts.filterWuxing}</button>
+        <button class="chip"           data-filter="special" role="tab" aria-selected="false">{t.beasts.filterSpecial}</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene archive-grid-section">
+    <div class="wrap">
+      <h2 class="group-title fade-up" data-group="wuxing">{t.beasts.groupWuxing}</h2>
+      <div class="grid grid-five" data-group="wuxing">
+        {wuxingLocalized.map((beast) => (
+          <BeastCard beast={beast} lang={lang} size="md" showStory />
+        ))}
+      </div>
+
+      <div class="group-divider fade-up">
+        <span class="line"></span>
+        <span class="char">{t.beasts.groupDivider}</span>
+        <span class="line"></span>
+      </div>
+
+      <h2 class="group-title fade-up" data-group="special">{t.beasts.groupSpecial}</h2>
+      <div class="grid grid-three" data-group="special">
+        {specialLocalized.map((beast) => (
+          <BeastCard beast={beast} lang={lang} size="md" showStory />
+        ))}
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .archive-hero { padding-block: 6rem 4rem; text-align: center; }
+  .archive-hero-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.6rem;
+  }
+
+  .filter {
+    display: inline-flex;
+    gap: 0.5rem;
+    padding: 0.4rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    margin-top: 0.4rem;
+  }
+  .chip {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    padding: 0.55rem 1.2rem;
+    border-radius: 999px;
+    font-family: var(--font-serif);
+    letter-spacing: 0.16em;
+    color: var(--color-cloud-dim);
+    transition: background 0.4s var(--ease-silk), color 0.4s var(--ease-silk);
+  }
+  .chip:hover { color: var(--color-cloud); }
+  .chip.is-active {
+    background: linear-gradient(120deg, rgba(241, 214, 135, 0.5), rgba(245, 166, 184, 0.4));
+    color: var(--color-ink);
+  }
+
+  .archive-grid-section { padding-block: 2rem 8rem; }
+
+  .group-title {
+    font-size: 1rem;
+    font-family: var(--font-display);
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--color-cloud-dim);
+    opacity: 0.7;
+    margin: 2.5rem 0 1.4rem;
+  }
+
+  .grid {
+    display: grid;
+    gap: 1.4rem;
+  }
+  .grid-five {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+  .grid-three {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    max-width: 60rem;
+  }
+  @media (min-width: 1100px) {
+    .grid-five { grid-template-columns: repeat(5, 1fr); }
+    .grid-three { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  .group-divider {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    justify-content: center;
+    margin-block: 4rem 1rem;
+  }
+  .group-divider .line {
+    flex: 1;
+    max-width: 16rem;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  }
+  .group-divider .char {
+    font-family: var(--font-serif);
+    letter-spacing: 0.5em;
+    color: var(--color-cloud-dim);
+  }
+
+  [data-filter-hidden="true"] { display: none !important; }
+</style>
+
+<script>
+  const chips = document.querySelectorAll<HTMLButtonElement>(".chip");
+  const groups = document.querySelectorAll<HTMLElement>("[data-group]");
+
+  chips.forEach((chip) => {
+    chip.addEventListener("click", () => {
+      chips.forEach((c) => {
+        c.classList.remove("is-active");
+        c.setAttribute("aria-selected", "false");
+      });
+      chip.classList.add("is-active");
+      chip.setAttribute("aria-selected", "true");
+
+      const filter = chip.dataset.filter ?? "all";
+      groups.forEach((g) => {
+        const match = filter === "all" || g.dataset.group === filter;
+        g.dataset.filterHidden = String(!match);
+      });
+    });
+  });
+</script>

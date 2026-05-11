@@ -1,0 +1,893 @@
+---
+import { Image } from "astro:assets";
+import {
+  beasts,
+  wuxingBeasts,
+  specialBeasts,
+  localizeBeast,
+  type LocalizedBeast,
+} from "@/data/beasts";
+import type { Locale } from "@/i18n/types";
+import { LOCALES, LOCALE_LABELS } from "@/i18n/types";
+import { getDict, localizedPath, switchLocaleHref } from "@/i18n";
+
+interface Props {
+  lang: Locale;
+}
+const { lang } = Astro.props;
+const t = getDict(lang);
+const year = new Date().getFullYear();
+
+const localized: LocalizedBeast[] = beasts.map((b) => localizeBeast(b, lang));
+
+function giantText(b: LocalizedBeast, l: Locale): string {
+  if (l === "en") return b.nameLatin.toUpperCase();
+  if (b.category === "wuxing") return `${b.glyph} 灵`;
+  if (b.id === "hundun") return "混 沌";
+  return b.glyph;
+}
+
+// Build slim client-side dataset
+const carouselData = localized.map((b) => ({
+  id: b.id,
+  glyph: b.glyph,
+  category: b.category,
+  element: b.element,
+  emotion: b.emotion,
+  nameZh: b.nameZh,
+  nameLatin: b.nameLatin,
+  displayName: b.displayName,
+  emotionTagline: b.emotionTagline,
+  signature: b.signature,
+  giant: giantText(b, lang),
+  palette: b.palette,
+  imageUrl: b.image.src,
+  imageWidth: b.image.width,
+  imageHeight: b.image.height,
+  detailHref: localizedPath(`/beasts/${b.id}`, lang),
+}));
+
+const initial = carouselData[0];
+const currentPath = Astro.url.pathname;
+const switchTargets = LOCALES.map((l) => ({
+  locale: l,
+  href: switchLocaleHref(currentPath, l),
+  short: LOCALE_LABELS[l].short,
+}));
+
+const homeHref = localizedPath("/", lang);
+const beastsHref = localizedPath("/beasts", lang);
+const resonanceHref = localizedPath("/resonance", lang);
+
+const allWuxingIds = wuxingBeasts.map((b) => b.id);
+const allSpecialIds = specialBeasts.map((b) => b.id);
+---
+
+<section
+  class:list={["hero-v2", `lang-${lang}`]}
+  aria-label={t.brand.tagline}
+  style={`--c-aura:${initial.palette.aura};--c-deep:${initial.palette.deep};--c-glow:${initial.palette.glow};--c-ink:${initial.palette.ink};--c-surface:${initial.palette.surface};--g1:${initial.palette.gradient[0]};--g2:${initial.palette.gradient[1]};--g3:${initial.palette.gradient[2]};`}
+>
+  <header class="hero-top">
+    <a href={homeHref} class="brand-mark" aria-label={t.nav.homeAria}>
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 40 40" width="32" height="32" fill="none">
+          <circle cx="20" cy="20" r="19" stroke="currentColor" stroke-opacity="0.4"/>
+          <circle cx="20" cy="6"  r="1.7" fill="#9B6B22"/>
+          <circle cx="33" cy="15" r="1.7" fill="#3F7A4A"/>
+          <circle cx="28" cy="32" r="1.7" fill="#2D6A93"/>
+          <circle cx="12" cy="32" r="1.7" fill="#C2354F"/>
+          <circle cx="7"  cy="15" r="1.7" fill="#7E5532"/>
+          <text x="20" y="25" text-anchor="middle" font-family="Noto Serif SC, serif" font-size="14" fill="currentColor" font-weight="600">五</text>
+        </svg>
+      </span>
+      <span class="brand-text">
+        <span class="zh">{t.brand.name}</span>
+        <span class="latin">{t.brand.nameLatin}</span>
+      </span>
+    </a>
+
+    <nav class="filter-pills" aria-label={t.nav.primaryAria}>
+      <button class="pill is-active" data-filter="all" data-event="hero_filter_all">{t.home.heroFiltersAll}</button>
+      {wuxingBeasts.map((b) => (
+        <button class="pill pill-glyph" data-filter={b.id} aria-label={b.id} data-event="hero_filter_beast">
+          <span style={`color:${b.palette.deep};`}>{b.glyph}</span>
+        </button>
+      ))}
+      <button class="pill" data-filter="trio" data-event="hero_filter_trio">{t.home.heroFiltersTrio}</button>
+    </nav>
+
+    <div class="top-end">
+      <div class="lang-switch" role="group" aria-label={t.nav.switcherAria}>
+        {switchTargets.map((s) => (
+          <a
+            href={s.href}
+            class:list={["lang-chip", { 'is-active': s.locale === lang }]}
+            hreflang={LOCALE_LABELS[s.locale].html}
+            aria-current={s.locale === lang ? "true" : undefined}
+          >{s.short}</a>
+        ))}
+      </div>
+      <a class="pill social-pill" href={resonanceHref} data-event="hero_resonance">{t.nav.headerCta}</a>
+    </div>
+  </header>
+
+  <div class="card-stage">
+    <article class="hero-card" id="hero-card" data-current-id={initial.id}>
+      <div class="card-glow" aria-hidden="true"></div>
+
+      <div class="card-corner-tl">
+        <span class="card-tag" id="card-tag">
+          {t.home.heroLabel} · <span id="card-tag-element">{initial.element}</span>
+        </span>
+      </div>
+
+      <div class="card-canvas">
+        <h1 class="bg-type" id="bg-type">
+          {Array.from(initial.giant).map((ch) => (
+            <span class="bg-char">{ch}</span>
+          ))}
+        </h1>
+        <div class="beast-frame" id="beast-frame">
+          {localized.map((b, i) => (
+            <Image
+              src={b.image}
+              alt={b.displayName}
+              width={780}
+              height={780}
+              densities={[1, 1.5, 2]}
+              loading={i === 0 ? "eager" : "lazy"}
+              decoding="async"
+              data-beast-img={b.id}
+              class:list={["beast-img", { 'is-active': i === 0 }]}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div class="card-bottom">
+        <div class="meta-block">
+          <p class="micro" id="card-eyebrow">{t.home.eyebrow}</p>
+          <h2 class="card-name">
+            <span class="primary" id="card-name-primary">
+              {lang === "zh" ? initial.nameZh : initial.nameLatin}
+            </span>
+            <span class="secondary" id="card-name-secondary">
+              {lang === "zh" ? initial.nameLatin : initial.nameZh}
+            </span>
+          </h2>
+          <p class="card-sig" id="card-sig">「{initial.signature}」</p>
+
+          <div class="nav-block">
+            <button class="round-btn prev" id="nav-prev" aria-label={t.home.heroPrev} data-event="hero_prev">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
+            </button>
+            <button class="round-btn next" id="nav-next" aria-label={t.home.heroNext} data-event="hero_next">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
+            <button class="thumb" id="thumb-btn" aria-label={t.home.heroNext}>
+              <Image
+                src={specialBeasts[0].image}
+                alt=""
+                width={120}
+                height={120}
+                id="thumb-img"
+              />
+            </button>
+          </div>
+        </div>
+
+        <a href={beastsHref} class="explore-cta" data-event="hero_explore_all">
+          <span class="explore-text" id="explore-text">{t.home.heroExplore}</span>
+          <span class="explore-arrow" aria-hidden="true">↗</span>
+        </a>
+      </div>
+    </article>
+  </div>
+
+  <footer class="hero-bottom">
+    <p class="copyright">{t.home.heroCopyright.replace("{year}", String(year))}</p>
+    <a href="#origin" class="pill scroll-pill" data-event="hero_scroll_cue">
+      <span>{t.home.scroll}</span>
+      <span class="arrow" aria-hidden="true">↓</span>
+    </a>
+  </footer>
+
+  <div class="bottom-fade" aria-hidden="true"></div>
+
+  <script type="application/json" id="hero-data" set:html={JSON.stringify({
+    items: carouselData,
+    lang,
+    eyebrowPrefix: t.home.eyebrow,
+    labelPrefix: t.home.heroLabel,
+    wuxingIds: allWuxingIds,
+    specialIds: allSpecialIds,
+  })}></script>
+</section>
+
+<style>
+  .hero-v2 {
+    position: relative;
+    min-height: 100vh;
+    padding: 1.5rem 1.5rem 2rem;
+    background:
+      radial-gradient(ellipse at 50% 0%, #f4e6cc 0%, transparent 60%),
+      linear-gradient(180deg, #ecdcbb 0%, #e2cca5 100%);
+    color: #2a1f12;
+    isolation: isolate;
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 1.5rem;
+  }
+
+  /* Subtle paper grain */
+  .hero-v2::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(rgba(120, 80, 30, 0.06) 1px, transparent 1px);
+    background-size: 6px 6px;
+    pointer-events: none;
+    z-index: 0;
+    mix-blend-mode: multiply;
+  }
+
+  .bottom-fade {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 240px;
+    background: linear-gradient(180deg, transparent 0%, rgba(12, 10, 20, 0.05) 35%, rgba(12, 10, 20, 0.4) 70%, var(--color-ink) 100%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* ---- Top bar ---- */
+  .hero-top {
+    position: relative;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 0.5rem 1rem;
+  }
+
+  .brand-mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    color: #2a1f12;
+  }
+  .mark {
+    color: #5a3b1b;
+    display: inline-flex;
+    transition: transform 0.6s var(--ease-silk);
+  }
+  .brand-mark:hover .mark { transform: rotate(45deg); }
+  .brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.05;
+  }
+  .brand-text .zh {
+    font-family: var(--font-serif);
+    font-size: 1.05rem;
+    letter-spacing: 0.18em;
+    color: #2a1f12;
+  }
+  .brand-text .latin {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    letter-spacing: 0.32em;
+    color: #6b4f2a;
+    opacity: 0.85;
+    text-transform: uppercase;
+  }
+
+  .filter-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    align-items: center;
+  }
+
+  .pill {
+    appearance: none;
+    border: 1px solid rgba(60, 40, 16, 0.22);
+    background: rgba(255, 248, 232, 0.5);
+    color: #2a1f12;
+    font: inherit;
+    font-family: var(--font-display);
+    font-size: 0.82rem;
+    letter-spacing: 0.16em;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.3s var(--ease-silk), border-color 0.3s var(--ease-silk), color 0.3s var(--ease-silk), transform 0.3s var(--ease-silk);
+  }
+  .pill:hover {
+    background: rgba(255, 248, 232, 0.85);
+    border-color: rgba(60, 40, 16, 0.4);
+  }
+  .pill.is-active {
+    background: #2a1f12;
+    color: #f4e6cc;
+    border-color: #2a1f12;
+  }
+  .pill-glyph {
+    width: 2.4rem;
+    height: 2.4rem;
+    padding: 0;
+    font-family: var(--font-serif);
+    font-size: 1rem;
+    letter-spacing: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .pill-glyph.is-active span {
+    color: #f4e6cc !important;
+  }
+
+  .top-end {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .lang-switch {
+    display: inline-flex;
+    padding: 0.2rem;
+    gap: 0.1rem;
+    border-radius: 999px;
+    background: rgba(255, 248, 232, 0.5);
+    border: 1px solid rgba(60, 40, 16, 0.22);
+  }
+  .lang-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.8rem;
+    height: 1.7rem;
+    padding: 0 0.55rem;
+    border-radius: 999px;
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    color: #6b4f2a;
+    transition: background 0.3s var(--ease-silk), color 0.3s var(--ease-silk);
+  }
+  .lang-chip:hover { color: #2a1f12; }
+  .lang-chip.is-active {
+    background: #2a1f12;
+    color: #f4e6cc;
+  }
+
+  .social-pill {
+    background: linear-gradient(120deg, var(--color-yao), var(--color-jin));
+    border-color: transparent;
+    color: #2a1f12;
+  }
+  .social-pill:hover {
+    background: linear-gradient(120deg, var(--color-jin), var(--color-yao));
+    transform: translateY(-1px);
+  }
+
+  /* ---- Card stage ---- */
+  .card-stage {
+    position: relative;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0 1rem;
+  }
+
+  .hero-card {
+    position: relative;
+    width: 100%;
+    max-width: 1280px;
+    aspect-ratio: 16 / 9;
+    min-height: 420px;
+    border-radius: 28px;
+    overflow: hidden;
+    isolation: isolate;
+    background: linear-gradient(135deg, var(--g1), var(--g2) 50%, var(--g3));
+    box-shadow:
+      0 30px 60px -28px color-mix(in oklab, var(--c-deep) 60%, transparent),
+      0 12px 24px -16px rgba(60, 40, 16, 0.3);
+    transition: background 0.9s var(--ease-silk), box-shadow 0.9s var(--ease-silk);
+  }
+
+  .card-glow {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background:
+      radial-gradient(80% 60% at 50% 30%, var(--c-glow) 0%, transparent 60%),
+      radial-gradient(60% 60% at 50% 100%, var(--c-deep) 0%, transparent 70%);
+    opacity: 0.7;
+    transition: opacity 0.9s var(--ease-silk);
+  }
+
+  .card-corner-tl {
+    position: absolute;
+    top: 1.4rem;
+    left: 1.6rem;
+    z-index: 5;
+  }
+  .card-tag {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--c-ink);
+    opacity: 0.7;
+  }
+
+  /* ---- Card canvas: bg type + beast ---- */
+  .card-canvas {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+  }
+
+  .bg-type {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.08em;
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: clamp(120px, 22vw, 340px);
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    color: var(--c-glow);
+    text-shadow:
+      0 6px 28px color-mix(in oklab, var(--c-deep) 50%, transparent),
+      0 1px 0 rgba(255, 255, 255, 0.15);
+    user-select: none;
+    z-index: 1;
+    transition: opacity 0.5s var(--ease-silk), transform 0.7s var(--ease-silk);
+    will-change: opacity, transform;
+  }
+  .lang-en .bg-type {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 600;
+    font-size: clamp(120px, 24vw, 380px);
+    letter-spacing: -0.06em;
+    gap: 0.04em;
+  }
+  .bg-char {
+    display: inline-block;
+  }
+
+  .beast-frame {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 2;
+    padding-bottom: 0;
+  }
+  .beast-img {
+    position: absolute;
+    bottom: -2%;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px) scale(0.96);
+    width: 92%;
+    max-width: 720px;
+    height: 100%;
+    object-fit: contain;
+    object-position: bottom;
+    opacity: 0;
+    filter: drop-shadow(0 30px 28px rgba(0, 0, 0, 0.5));
+    transition: opacity 0.6s var(--ease-silk), transform 0.8s var(--ease-silk);
+    will-change: opacity, transform;
+  }
+  .beast-img.is-active {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+
+  /* ---- Card bottom ---- */
+  .card-bottom {
+    position: absolute;
+    inset: auto 1.6rem 1.4rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    z-index: 6;
+  }
+
+  .meta-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    color: var(--c-ink);
+    max-width: 32%;
+  }
+  .micro {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    opacity: 0.65;
+  }
+  .card-name {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    line-height: 1.05;
+  }
+  .card-name .primary {
+    font-family: var(--font-serif);
+    font-size: clamp(1.3rem, 2vw, 1.8rem);
+    letter-spacing: 0.18em;
+    font-weight: 600;
+  }
+  .lang-en .card-name .primary {
+    font-family: var(--font-display);
+    font-style: italic;
+    letter-spacing: 0.04em;
+  }
+  .card-name .secondary {
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+  .lang-en .card-name .secondary {
+    font-family: var(--font-serif);
+    font-style: normal;
+    letter-spacing: 0.42em;
+    text-transform: none;
+  }
+
+  .card-sig {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 0.82rem;
+    line-height: 1.55;
+    opacity: 0.85;
+    max-width: 28ch;
+  }
+
+  .nav-block {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 0.4rem;
+  }
+  .round-btn {
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in oklab, var(--c-ink) 35%, transparent);
+    background: rgba(255, 248, 232, 0.4);
+    color: var(--c-ink);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s var(--ease-silk), transform 0.3s var(--ease-silk), border-color 0.3s var(--ease-silk);
+  }
+  .round-btn:hover {
+    background: rgba(255, 248, 232, 0.8);
+    transform: translateY(-1px);
+  }
+
+  .thumb {
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 999px;
+    overflow: hidden;
+    padding: 0;
+    border: 1px solid color-mix(in oklab, var(--c-ink) 35%, transparent);
+    background: rgba(255, 248, 232, 0.6);
+    cursor: pointer;
+    transition: transform 0.3s var(--ease-silk), border-color 0.3s var(--ease-silk);
+  }
+  .thumb:hover { transform: scale(1.06); }
+  .thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .explore-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-block: 0.35rem;
+    color: var(--c-ink);
+    font-family: var(--font-display);
+    font-size: 1rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    align-self: flex-end;
+    position: relative;
+  }
+  .explore-cta::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: currentColor;
+    transform-origin: left;
+    transform: scaleX(0.4);
+    transition: transform 0.4s var(--ease-silk);
+    opacity: 0.4;
+  }
+  .explore-cta:hover::after {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  .explore-cta .explore-arrow {
+    transition: transform 0.4s var(--ease-silk);
+  }
+  .explore-cta:hover .explore-arrow {
+    transform: translate(2px, -2px);
+  }
+
+  /* ---- Bottom bar ---- */
+  .hero-bottom {
+    position: relative;
+    z-index: 5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 0.5rem 1rem 0;
+  }
+  .copyright {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    letter-spacing: 0.18em;
+    color: #4a3520;
+  }
+  .scroll-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .scroll-pill .arrow {
+    animation: bob 2.4s ease-in-out infinite;
+  }
+  @keyframes bob {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(2px); }
+  }
+
+  /* ---- Responsive ---- */
+  @media (max-width: 880px) {
+    .hero-v2 { padding: 1rem; gap: 1rem; }
+    .filter-pills { order: 3; flex-basis: 100%; justify-content: center; }
+    .top-end { gap: 0.4rem; }
+    .hero-card {
+      aspect-ratio: 4 / 5;
+      min-height: 540px;
+    }
+    .card-bottom {
+      flex-direction: column;
+      align-items: flex-start;
+      inset: auto 1.2rem 1.2rem;
+    }
+    .meta-block { max-width: 100%; }
+    .explore-cta { align-self: flex-start; }
+    .bg-type { font-size: clamp(80px, 24vw, 200px); }
+  }
+</style>
+
+<script>
+  import { track } from "@/lib/analytics";
+
+  type BeastInfo = {
+    id: string;
+    glyph: string;
+    category: "wuxing" | "special";
+    element: string;
+    emotion: string;
+    nameZh: string;
+    nameLatin: string;
+    displayName: string;
+    emotionTagline: string;
+    signature: string;
+    giant: string;
+    palette: {
+      aura: string;
+      deep: string;
+      glow: string;
+      ink: string;
+      surface: string;
+      gradient: [string, string, string];
+    };
+    imageUrl: string;
+    detailHref: string;
+  };
+
+  type HeroData = {
+    items: BeastInfo[];
+    lang: "zh" | "en";
+    eyebrowPrefix: string;
+    labelPrefix: string;
+    wuxingIds: string[];
+    specialIds: string[];
+  };
+
+  const dataEl = document.getElementById("hero-data");
+  if (!dataEl) {
+    // can't initialize without data
+  } else {
+    const data: HeroData = JSON.parse(dataEl.textContent ?? "{}");
+    const card = document.getElementById("hero-card") as HTMLElement | null;
+    const bgType = document.getElementById("bg-type") as HTMLHeadingElement | null;
+    const beastImgs = document.querySelectorAll<HTMLImageElement>(".beast-img");
+    const namePrim = document.getElementById("card-name-primary");
+    const nameSec = document.getElementById("card-name-secondary");
+    const sig = document.getElementById("card-sig");
+    const eyebrow = document.getElementById("card-eyebrow");
+    const tagEl = document.getElementById("card-tag-element");
+    const thumbImg = document.getElementById("thumb-img") as HTMLImageElement | null;
+    const pills = document.querySelectorAll<HTMLButtonElement>(".filter-pills .pill");
+    const navPrev = document.getElementById("nav-prev");
+    const navNext = document.getElementById("nav-next");
+    const thumbBtn = document.getElementById("thumb-btn");
+
+    if (card && bgType && beastImgs.length && data.items.length) {
+      let order = data.items.map((b) => b.id);
+      let cur = 0;
+
+      function findIdx(id: string): number {
+        return order.indexOf(id);
+      }
+
+      function renderBg(text: string) {
+        if (!bgType) return;
+        bgType.innerHTML = "";
+        for (const ch of text) {
+          const span = document.createElement("span");
+          span.className = "bg-char";
+          span.textContent = ch;
+          bgType.appendChild(span);
+        }
+      }
+
+      function show(i: number) {
+        if (i < 0 || i >= order.length) return;
+        const id = order[i];
+        const b = data.items.find((x) => x.id === id);
+        if (!b || !card) return;
+
+        card.dataset.currentId = id;
+        card.style.setProperty("--c-aura", b.palette.aura);
+        card.style.setProperty("--c-deep", b.palette.deep);
+        card.style.setProperty("--c-glow", b.palette.glow);
+        card.style.setProperty("--c-ink", b.palette.ink);
+        card.style.setProperty("--g1", b.palette.gradient[0]);
+        card.style.setProperty("--g2", b.palette.gradient[1]);
+        card.style.setProperty("--g3", b.palette.gradient[2]);
+
+        // Cross-fade beast images
+        beastImgs.forEach((img) => {
+          img.classList.toggle("is-active", img.dataset.beastImg === id);
+        });
+
+        // Update text
+        renderBg(b.giant);
+        if (namePrim) namePrim.textContent = data.lang === "zh" ? b.nameZh : b.nameLatin;
+        if (nameSec) nameSec.textContent = data.lang === "zh" ? b.nameLatin : b.nameZh;
+        if (sig) sig.textContent = `「${b.signature}」`;
+        if (eyebrow) eyebrow.textContent = `${data.eyebrowPrefix} · ${b.element}`;
+        if (tagEl) tagEl.textContent = b.element;
+
+        // Update next-thumb to next beast
+        const nextId = order[(i + 1) % order.length];
+        const nextBeast = data.items.find((x) => x.id === nextId);
+        if (thumbImg && nextBeast) {
+          thumbImg.src = nextBeast.imageUrl;
+          thumbImg.alt = nextBeast.displayName;
+        }
+
+        // Update pill active state
+        pills.forEach((p) => {
+          const f = p.dataset.filter ?? "";
+          let active = false;
+          if (f === b.id) active = true;
+          else if (f === "all" && b.category === "wuxing" && i === 0) active = true; // initial
+          p.classList.toggle("is-active", active);
+        });
+
+        cur = i;
+      }
+
+      function applyFilter(f: string) {
+        if (f === "all") order = data.items.filter((x) => x.category === "wuxing").map((x) => x.id);
+        else if (f === "trio") order = data.items.filter((x) => x.category === "special").map((x) => x.id);
+        else order = [f]; // single beast pinned
+        // Update pill active
+        pills.forEach((p) => p.classList.toggle("is-active", p.dataset.filter === f));
+        // Show first
+        cur = 0;
+        show(0);
+      }
+
+      // Initial state: show 'all' wuxing, current = 0 (jin)
+      order = data.wuxingIds;
+      show(0);
+
+      navPrev?.addEventListener("click", () => {
+        const i = (cur - 1 + order.length) % order.length;
+        show(i);
+        track("hero_nav", { dir: "prev", beast: order[i] });
+      });
+      navNext?.addEventListener("click", () => {
+        const i = (cur + 1) % order.length;
+        show(i);
+        track("hero_nav", { dir: "next", beast: order[i] });
+      });
+      thumbBtn?.addEventListener("click", () => {
+        const i = (cur + 1) % order.length;
+        show(i);
+        track("hero_nav", { dir: "thumb", beast: order[i] });
+      });
+
+      pills.forEach((p) => {
+        p.addEventListener("click", () => {
+          const f = p.dataset.filter ?? "all";
+          if (f === "all" || f === "trio") {
+            applyFilter(f);
+          } else {
+            // single beast: include in current order if not, else just navigate
+            const idx = findIdx(f);
+            if (idx >= 0) show(idx);
+            else applyFilter(f);
+          }
+          track("hero_filter", { filter: f });
+        });
+      });
+
+      // Auto-advance every 7s, pause on hover
+      let auto = window.setInterval(() => {
+        if (document.hidden) return;
+        const i = (cur + 1) % order.length;
+        show(i);
+      }, 7000);
+      card.addEventListener("pointerenter", () => { window.clearInterval(auto); });
+      card.addEventListener("pointerleave", () => {
+        auto = window.setInterval(() => {
+          if (document.hidden) return;
+          const i = (cur + 1) % order.length;
+          show(i);
+        }, 7000);
+      });
+
+      // Keyboard nav
+      document.addEventListener("keydown", (e) => {
+        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+        if (e.key === "ArrowLeft") navPrev?.click();
+        else if (e.key === "ArrowRight") navNext?.click();
+      });
+    }
+  }
+</script>

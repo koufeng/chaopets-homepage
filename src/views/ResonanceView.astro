@@ -1,0 +1,651 @@
+---
+import Base from "@/layouts/Base.astro";
+import { Image } from "astro:assets";
+import ParticleField from "@/components/ParticleField.astro";
+import { beasts, localizeBeast } from "@/data/beasts";
+import { getLocalizedQuestions } from "@/lib/resonance";
+import { getDict, localizedPath } from "@/i18n";
+import type { Locale } from "@/i18n/types";
+
+interface Props {
+  lang: Locale;
+}
+const { lang } = Astro.props;
+const t = getDict(lang);
+
+const localizedQuestions = getLocalizedQuestions(lang);
+
+// 给客户端用的 beast 元数据（按 lang 本地化）
+const beastsForClient = Object.fromEntries(
+  beasts.map((b) => {
+    const loc = localizeBeast(b, lang);
+    return [
+      b.id,
+      {
+        id: loc.id,
+        glyph: loc.glyph,
+        element: loc.element,
+        nameZh: loc.nameZh,
+        nameLatin: loc.nameLatin,
+        displayName: loc.displayName,
+        emotion: loc.emotion,
+        emotionTagline: loc.emotionTagline,
+        signature: loc.signature,
+        storyOpening: loc.storyOpening,
+        palette: loc.palette,
+        imageUrl: loc.image.src,
+        imageWidth: loc.image.width,
+        imageHeight: loc.image.height,
+      },
+    ];
+  }),
+);
+---
+
+<Base
+  lang={lang}
+  title={t.meta.resonanceTitle}
+  description={t.meta.resonanceDesc}
+  pageId="resonance"
+  logicalPath="/resonance"
+>
+  <section class="resonance">
+    <ParticleField kind="aurora" count={36} className="resonance-stars" />
+
+    <div class="wrap quiz" id="quiz-view">
+      <header class="quiz-head fade-up">
+        <p class="eyebrow">{t.resonance.eyebrow}</p>
+        <h1>{t.resonance.title}</h1>
+        <p class="subtitle">{t.resonance.subtitle}</p>
+      </header>
+
+      <div class="progress" aria-hidden="true">
+        <span class="bar" id="progress-bar"></span>
+      </div>
+
+      <ol class="steps" id="steps">
+        {localizedQuestions.map((q, qi) => (
+          <li class="step" data-step-index={qi} data-step-id={q.id}>
+            <p class="step-caption">{q.caption}</p>
+            <h2 class="step-prompt">{q.prompt}</h2>
+            <div class="options">
+              {q.options.map((o, oi) => (
+                <button
+                  type="button"
+                  class="option"
+                  data-step={q.id}
+                  data-option={oi}
+                >
+                  <span class="opt-mark"></span>
+                  <span class="opt-label">{o.label}</span>
+                </button>
+              ))}
+            </div>
+            {qi > 0 && (
+              <button type="button" class="step-back" data-back>{t.resonance.backStep}</button>
+            )}
+          </li>
+        ))}
+      </ol>
+    </div>
+
+    <div class="wrap result is-hidden" id="result-view" aria-live="polite">
+      <article class="result-card">
+        <div class="result-art" id="result-art">
+          <div class="result-glow" aria-hidden="true"></div>
+          <img id="result-img" alt="" />
+        </div>
+        <div class="result-meta">
+          <p class="eyebrow">{t.resonance.resultEyebrow}</p>
+          <h2 class="result-name">
+            <span class="primary" id="result-name-primary"></span>
+            <span class="secondary" id="result-name-secondary"></span>
+          </h2>
+          <p class="result-tag" id="result-tagline"></p>
+          <p class="result-sig" id="result-sig"></p>
+          <p class="result-story" id="result-story"></p>
+
+          <div class="result-actions">
+            <button type="button" class="btn btn-primary" id="download-card">
+              {t.resonance.resultDownload}
+            </button>
+            <button type="button" class="btn btn-ghost" id="copy-link" data-copied={t.resonance.resultCopied} data-default={t.resonance.resultCopy}>
+              {t.resonance.resultCopy}
+            </button>
+            <a class="btn btn-ghost" id="visit-archive" href={localizedPath("/beasts", lang)}>{t.resonance.resultArchive}</a>
+          </div>
+          <button type="button" class="retake" id="retake">{t.resonance.resultRetake}</button>
+        </div>
+      </article>
+
+      <canvas id="card-canvas" width="1080" height="1080" aria-hidden="true"></canvas>
+    </div>
+  </section>
+
+  <div class="hidden-imgs" aria-hidden="true">
+    {beasts.map((b) => (
+      <Image
+        src={b.image}
+        alt=""
+        width={720}
+        height={720}
+        densities={[1.5, 2]}
+        loading="eager"
+        decoding="async"
+        data-beast={b.id}
+      />
+    ))}
+  </div>
+
+  <script type="application/json" id="beasts-data" set:html={JSON.stringify(beastsForClient)}></script>
+  <script type="application/json" id="resonance-strings" set:html={JSON.stringify({ watermark: t.resonance.cardWatermark, lang })}></script>
+</Base>
+
+<style>
+  .resonance {
+    position: relative;
+    min-height: 100vh;
+    padding-block: 5rem 6rem;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .resonance-stars {
+    position: absolute; inset: 0; z-index: 0;
+  }
+
+  .quiz, .result {
+    position: relative;
+    z-index: 1;
+  }
+
+  .quiz-head { text-align: center; margin-bottom: 2rem; }
+  .quiz-head h1 {
+    font-size: clamp(1.6rem, 4vw, 2.6rem);
+    margin: 0.5rem 0;
+    text-wrap: balance;
+  }
+  .subtitle {
+    color: var(--color-cloud-dim);
+    margin: 0;
+  }
+
+  .progress {
+    height: 2px;
+    width: min(100%, 30rem);
+    margin: 0 auto 3rem;
+    background: rgba(255,255,255,0.08);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .bar {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--color-yao), var(--color-jin), var(--color-huo));
+    transition: width 0.6s var(--ease-silk);
+  }
+
+  .steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    min-height: 28rem;
+  }
+  .step {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+    align-items: center;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.6s var(--ease-silk), transform 0.6s var(--ease-silk);
+    pointer-events: none;
+  }
+  .step.is-active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .step-caption {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.32em;
+    font-size: 0.78rem;
+    color: var(--color-cloud-dim);
+    opacity: 0.7;
+    margin: 0;
+  }
+  .step-prompt {
+    font-family: var(--font-serif);
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    margin: 0;
+    line-height: 1.5;
+    text-wrap: balance;
+  }
+
+  .options {
+    display: grid;
+    gap: 0.8rem;
+    width: 100%;
+    max-width: 38rem;
+  }
+  .option {
+    appearance: none;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius-soft);
+    padding: 1rem 1.2rem;
+    color: var(--color-cloud);
+    font: inherit;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: background 0.4s var(--ease-silk), border-color 0.4s var(--ease-silk), transform 0.4s var(--ease-silk);
+  }
+  .option:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.2);
+    transform: translateY(-1px);
+  }
+  .opt-mark {
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.3);
+    flex-shrink: 0;
+    transition: background 0.4s var(--ease-silk), border-color 0.4s var(--ease-silk);
+  }
+  .option:hover .opt-mark { border-color: var(--color-yao); background: var(--color-yao); }
+
+  .opt-label {
+    font-family: var(--font-serif);
+    letter-spacing: 0.04em;
+    font-size: 1rem;
+  }
+
+  .step-back {
+    margin-top: 1rem;
+    background: transparent;
+    border: 0;
+    color: var(--color-cloud-dim);
+    font-family: var(--font-display);
+    letter-spacing: 0.32em;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    opacity: 0.7;
+    cursor: pointer;
+    transition: opacity 0.3s var(--ease-silk);
+  }
+  .step-back:hover { opacity: 1; }
+
+  .result.is-hidden { display: none; }
+  .result-card {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    align-items: center;
+    margin-top: 2rem;
+    padding: 2rem;
+    border-radius: var(--radius-soft);
+    background: linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.005));
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  @media (min-width: 880px) {
+    .result-card { grid-template-columns: 1fr 1.1fr; gap: 5rem; padding: 3rem; }
+  }
+
+  .result-art {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: var(--radius-soft);
+    overflow: hidden;
+    background: linear-gradient(180deg, var(--c-aura, #f1d687), var(--c-deep, #9b6b22));
+    isolation: isolate;
+  }
+  .result-art::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(60% 50% at 50% 30%, var(--c-glow, #FFE6A6) 0%, transparent 60%);
+    z-index: 0;
+  }
+  .result-glow {
+    position: absolute;
+    inset: -20%;
+    z-index: -1;
+    background: radial-gradient(closest-side, var(--c-glow, #FFE6A6), transparent 70%);
+    opacity: 0.5;
+    filter: blur(40px);
+    animation: breathe 6s ease-in-out infinite;
+  }
+  #result-img {
+    position: relative;
+    z-index: 1;
+    width: 88%;
+    height: 88%;
+    margin: 6%;
+    object-fit: contain;
+    filter: drop-shadow(0 22px 32px rgba(0, 0, 0, 0.55));
+  }
+
+  .result-meta { display: flex; flex-direction: column; gap: 1.2rem; }
+  .result-name {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .result-name .primary {
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    letter-spacing: 0.28em;
+  }
+  :global(html[data-locale="en"]) .result-name .primary {
+    font-family: var(--font-display);
+    font-style: italic;
+    letter-spacing: 0.04em;
+  }
+  .result-name .secondary {
+    font-family: var(--font-display);
+    font-style: italic;
+    letter-spacing: 0.32em;
+    color: var(--color-cloud-dim);
+    font-size: 0.95rem;
+  }
+  .result-tag {
+    font-family: var(--font-serif);
+    font-size: 1rem;
+    color: var(--c-aura, #f4e2b5);
+    margin: 0;
+    line-height: 1.6;
+  }
+  .result-sig {
+    margin: 0;
+    padding: 1rem 1.25rem;
+    border-left: 2px solid var(--c-aura, #f4e2b5);
+    background: rgba(255,255,255,0.03);
+    font-family: var(--font-serif);
+    line-height: 1.85;
+    border-radius: 0.4rem;
+  }
+  .result-story {
+    color: var(--color-cloud-dim);
+    margin: 0;
+    line-height: 1.85;
+  }
+
+  .result-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 0.6rem;
+  }
+  .retake {
+    background: transparent;
+    border: 0;
+    color: var(--color-cloud-dim);
+    font-family: var(--font-display);
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    font-size: 0.78rem;
+    opacity: 0.6;
+    cursor: pointer;
+    align-self: flex-start;
+    margin-top: 0.6rem;
+    transition: opacity 0.3s var(--ease-silk);
+  }
+  .retake:hover { opacity: 1; }
+
+  #card-canvas {
+    position: absolute;
+    left: -99999px;
+    top: -99999px;
+    width: 1080px;
+    height: 1080px;
+  }
+
+  .hidden-imgs { display: none; }
+</style>
+
+<script>
+  import { matchBeast, questions } from "@/lib/resonance";
+  import { track, Events } from "@/lib/analytics";
+
+  type BeastInfo = {
+    id: string;
+    glyph: string;
+    element: string;
+    nameZh: string;
+    nameLatin: string;
+    displayName: string;
+    emotion: string;
+    emotionTagline: string;
+    signature: string;
+    storyOpening: string;
+    palette: {
+      aura: string;
+      deep: string;
+      glow: string;
+      ink: string;
+      surface: string;
+      gradient: [string, string, string];
+    };
+    imageUrl: string;
+  };
+
+  const beastsData: Record<string, BeastInfo> = JSON.parse(
+    document.getElementById("beasts-data")?.textContent ?? "{}",
+  );
+  const strings = JSON.parse(
+    document.getElementById("resonance-strings")?.textContent ?? "{}",
+  ) as { watermark: string; lang: "zh" | "en" };
+
+  const stepsEl = document.getElementById("steps")!;
+  const stepEls = Array.from(stepsEl.querySelectorAll<HTMLElement>(".step"));
+  const bar = document.getElementById("progress-bar")!;
+  const quizView = document.getElementById("quiz-view")!;
+  const resultView = document.getElementById("result-view")!;
+
+  const answers: Record<string, number> = {};
+  let cur = 0;
+
+  function showStep(i: number) {
+    stepEls.forEach((el, idx) => el.classList.toggle("is-active", idx === i));
+    bar.style.width = `${(i / questions.length) * 100}%`;
+    cur = i;
+  }
+
+  function reveal(beastId: string) {
+    bar.style.width = "100%";
+    quizView.style.display = "none";
+    resultView.classList.remove("is-hidden");
+    const b = beastsData[beastId];
+    if (!b) return;
+
+    const card = resultView.querySelector<HTMLElement>(".result-card");
+    if (card) {
+      card.style.setProperty("--c-aura", b.palette.aura);
+      card.style.setProperty("--c-deep", b.palette.deep);
+      card.style.setProperty("--c-glow", b.palette.glow);
+    }
+
+    const img = document.getElementById("result-img") as HTMLImageElement;
+    img.src = b.imageUrl;
+    img.alt = b.displayName;
+
+    const primary = strings.lang === "zh" ? b.nameZh : b.nameLatin;
+    const secondary = strings.lang === "zh" ? b.nameLatin : b.nameZh;
+    (document.getElementById("result-name-primary")!).textContent = primary;
+    (document.getElementById("result-name-secondary")!).textContent = secondary;
+    (document.getElementById("result-tagline")!).textContent = `${b.element} · ${b.emotion} · ${b.emotionTagline}`;
+    (document.getElementById("result-sig")!).textContent = `「${b.signature}」`;
+    (document.getElementById("result-story")!).textContent = b.storyOpening;
+
+    const url = new URL(window.location.href);
+    url.searchParams.set("id", beastId);
+    history.replaceState(null, "", url.toString());
+
+    track(Events.RESONANCE_COMPLETED, { beast: beastId });
+
+    void renderCard(b);
+  }
+
+  function reset() {
+    for (const k of Object.keys(answers)) delete answers[k];
+    quizView.style.display = "";
+    resultView.classList.add("is-hidden");
+    showStep(0);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("id");
+    history.replaceState(null, "", url.toString());
+  }
+
+  document.querySelectorAll<HTMLButtonElement>(".option").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const stepId = btn.dataset.step!;
+      const optIdx = Number(btn.dataset.option);
+      answers[stepId] = optIdx;
+
+      btn.parentElement?.querySelectorAll(".option").forEach((o) => o.classList.remove("is-picked"));
+      btn.classList.add("is-picked");
+
+      const next = cur + 1;
+      if (next >= questions.length) {
+        const beastId = matchBeast(answers);
+        setTimeout(() => reveal(beastId), 320);
+      } else {
+        setTimeout(() => showStep(next), 320);
+      }
+    });
+  });
+
+  document.querySelectorAll<HTMLButtonElement>("[data-back]").forEach((btn) => {
+    btn.addEventListener("click", () => showStep(Math.max(0, cur - 1)));
+  });
+
+  const retake = document.getElementById("retake");
+  retake?.addEventListener("click", reset);
+
+  const initial = new URLSearchParams(window.location.search).get("id");
+  if (initial && beastsData[initial]) {
+    reveal(initial);
+  } else {
+    showStep(0);
+    track(Events.RESONANCE_OPENED);
+  }
+
+  async function loadImage(src: string): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = src;
+    });
+  }
+
+  function roundedPath(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  async function renderCard(b: BeastInfo) {
+    const canvas = document.getElementById("card-canvas") as HTMLCanvasElement;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const W = canvas.width, H = canvas.height;
+
+    const grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, b.palette.gradient[0]);
+    grad.addColorStop(0.5, b.palette.gradient[1]);
+    grad.addColorStop(1, b.palette.gradient[2]);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.strokeStyle = "rgba(255,255,255,0.25)";
+    ctx.lineWidth = 2;
+    roundedPath(ctx, 36, 36, W - 72, H - 72, 36);
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(0,0,0,0.08)";
+    ctx.font = "700 540px 'Noto Serif SC', serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(b.glyph.substring(0, 2), W / 2, H / 2 + 30);
+
+    try {
+      const img = await loadImage(b.imageUrl);
+      const size = 720;
+      const x = (W - size) / 2;
+      const y = (H - size) / 2 - 30;
+      ctx.shadowColor = "rgba(0,0,0,0.45)";
+      ctx.shadowBlur = 30;
+      ctx.shadowOffsetY = 20;
+      ctx.drawImage(img, x, y, size, size);
+      ctx.shadowColor = "transparent";
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+    } catch (e) {
+      // ignore
+    }
+
+    ctx.fillStyle = "rgba(0,0,0,0.5)";
+    ctx.font = "italic 26px 'Cormorant Garamond', serif";
+    ctx.textAlign = "left";
+    ctx.fillText(strings.watermark, 80, 100);
+
+    const baseY = H - 200;
+    ctx.fillStyle = b.palette.ink;
+    ctx.font = "600 92px 'Noto Serif SC', serif";
+    ctx.textAlign = "center";
+    const headline = strings.lang === "zh" ? `${b.nameZh} · ${b.nameLatin}` : `${b.nameLatin} · ${b.nameZh}`;
+    ctx.fillText(headline, W / 2, baseY);
+
+    ctx.fillStyle = "rgba(0,0,0,0.55)";
+    ctx.font = "400 34px 'Noto Serif SC', serif";
+    ctx.fillText(`${b.element} · ${b.emotion} · ${b.emotionTagline}`, W / 2, baseY + 70);
+
+    ctx.fillStyle = "rgba(0,0,0,0.7)";
+    ctx.font = "italic 30px 'Noto Serif SC', serif";
+    ctx.fillText(strings.lang === "zh" ? `「${b.signature}」` : `“${b.signature}”`, W / 2, baseY + 130);
+
+    canvas.dataset.ready = "1";
+  }
+
+  document.getElementById("download-card")?.addEventListener("click", () => {
+    const canvas = document.getElementById("card-canvas") as HTMLCanvasElement;
+    if (canvas.dataset.ready !== "1") return;
+    const a = document.createElement("a");
+    const beastId = new URLSearchParams(window.location.search).get("id") ?? "beast";
+    a.download = `wuxing-beasts-${beastId}.png`;
+    a.href = canvas.toDataURL("image/png");
+    a.click();
+    track(Events.RESONANCE_SHARED, { beast: beastId, kind: "download" });
+  });
+
+  document.getElementById("copy-link")?.addEventListener("click", async () => {
+    const btn = document.getElementById("copy-link")! as HTMLButtonElement;
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      const copied = btn.dataset.copied ?? "Copied";
+      const def = btn.dataset.default ?? btn.textContent ?? "";
+      btn.textContent = copied;
+      setTimeout(() => (btn.textContent = def), 1500);
+      const beastId = new URLSearchParams(window.location.search).get("id") ?? "";
+      track(Events.RESONANCE_SHARED, { beast: beastId, kind: "link" });
+    } catch {
+      // ignore
+    }
+  });
+</script>

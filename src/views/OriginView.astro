@@ -1,0 +1,340 @@
+---
+import Base from "@/layouts/Base.astro";
+import SectionHeading from "@/components/SectionHeading.astro";
+import ParticleField from "@/components/ParticleField.astro";
+import { Image } from "astro:assets";
+import { groupShot } from "@/data/beasts";
+import { getDict, localizedPath } from "@/i18n";
+import type { Locale } from "@/i18n/types";
+
+interface Props {
+  lang: Locale;
+}
+const { lang } = Astro.props;
+const t = getDict(lang);
+
+const elementColors = ["#F1D687", "#A8D6A8", "#9CCDE8", "#F5A6B8", "#D8B795"];
+---
+
+<Base
+  lang={lang}
+  title={t.meta.originTitle}
+  description={t.meta.originDesc}
+  pageId="origin"
+  logicalPath="/origin"
+>
+  <article class="origin">
+    <section class="scene chapter intro">
+      <ParticleField kind="aurora" count={36} className="origin-stars" />
+      <div class="wrap intro-inner fade-up">
+        <p class="eyebrow">{t.origin.eyebrow}</p>
+        <h1 class="chapter-title">
+          {t.origin.introTitle.map((line) => <span class="line">{line}</span>)}
+        </h1>
+        <p class="lead text-balance">{t.origin.intro}</p>
+      </div>
+    </section>
+
+    <section class="scene chapter five-chi">
+      <div class="wrap chi-grid">
+        <div class="copy fade-up">
+          <SectionHeading
+            eyebrow={t.origin.fiveQiEyebrow}
+            title={t.origin.fiveQiTitle}
+            description={t.origin.fiveQiDesc}
+          />
+        </div>
+        <ul class="chi-list">
+          {t.origin.fiveQiList.map((it, i) => (
+            <li class="chi-row fade-up" style={`--delay:${i * 0.1}s;--c:${elementColors[i]};`}>
+              <span class="chi-glyph">{it.c}</span>
+              <div>
+                <p class="chi-tag">{it.t}</p>
+                <p class="chi-desc">{it.d}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <section class="scene chapter calling">
+      <div class="wrap calling-inner fade-up">
+        <SectionHeading
+          eyebrow={t.origin.callingEyebrow}
+          title={t.origin.callingTitle}
+          align="center"
+        />
+        <p class="vow text-balance">
+          {t.origin.callingVow1}
+          <br />{t.origin.callingVow2}
+        </p>
+        <div class="vow-meta">
+          {t.origin.callingMeta.map((line) => <p>{line}</p>)}
+        </div>
+      </div>
+    </section>
+
+    <section class="scene chapter trio-chapter">
+      <div class="wrap trio-inner">
+        <div class="copy fade-up">
+          <SectionHeading
+            eyebrow={t.origin.trioEyebrow}
+            title={t.origin.trioTitle}
+            description={t.origin.trioDesc}
+          />
+        </div>
+        <ul class="trio-cards">
+          {t.origin.trioCards.map((card, i) => (
+            <li class="fade-up" style={`--delay:${i * 0.1}s`}>
+              <h4>{card.name}</h4>
+              <p class="trio-tag">{card.tag}</p>
+              <p>{card.desc}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <section class="scene chapter unseal">
+      <div class="wrap unseal-grid">
+        <div class="art fade-up">
+          <Image
+            src={groupShot}
+            alt={t.origin.unsealTitle}
+            width={1080}
+            height={520}
+            densities={[1, 1.5, 2]}
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+        <div class="copy fade-up">
+          <SectionHeading
+            eyebrow={t.origin.unsealEyebrow}
+            title={t.origin.unsealTitle}
+            description={t.origin.unsealDesc}
+          />
+          <div class="unseal-actions">
+            <a href={localizedPath("/beasts", lang)} class="btn btn-primary">{t.origin.unsealCtaPrimary}</a>
+            <a href={localizedPath("/resonance", lang)} class="btn btn-ghost">{t.origin.unsealCtaSecondary}</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </article>
+</Base>
+
+<style>
+  .origin { isolation: isolate; }
+  .chapter { padding-block: 8rem; }
+
+  .intro {
+    text-align: center;
+    min-height: 80vh;
+    position: relative;
+  }
+  .origin-stars { position: absolute; inset: 0; z-index: 0; }
+  .intro-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: center;
+  }
+  .chapter-title {
+    margin: 0;
+    line-height: 1.2;
+    font-size: clamp(2rem, 6vw, 4.5rem);
+    font-family: var(--font-serif);
+  }
+  .chapter-title .line {
+    display: block;
+    letter-spacing: 0.5em;
+    background: linear-gradient(180deg, #fff7e3, #f1d687);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-wrap: balance;
+  }
+  :global(html[data-locale="en"]) .chapter-title .line {
+    letter-spacing: 0.06em;
+  }
+  .lead {
+    max-width: 40rem;
+    line-height: 2;
+    color: var(--color-cloud-dim);
+    font-size: 1.05rem;
+  }
+
+  .chi-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    align-items: center;
+  }
+  @media (min-width: 880px) {
+    .chi-grid { grid-template-columns: 1fr 1fr; gap: 5rem; }
+  }
+
+  .chi-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+  }
+  .chi-row {
+    display: flex;
+    gap: 1.4rem;
+    align-items: center;
+    padding: 1.2rem 1.4rem;
+    border-radius: var(--radius-soft);
+    border: 1px solid rgba(255,255,255,0.08);
+    background: linear-gradient(135deg, color-mix(in oklab, var(--c) 12%, transparent), transparent 70%);
+    transition: transform 0.4s var(--ease-silk), border-color 0.4s var(--ease-silk);
+    transition-delay: var(--delay);
+  }
+  .chi-row:hover {
+    transform: translateX(6px);
+    border-color: color-mix(in oklab, var(--c) 50%, transparent);
+  }
+  .chi-glyph {
+    font-family: var(--font-serif);
+    font-size: 2rem;
+    line-height: 1;
+    color: var(--c);
+    text-shadow: 0 0 30px color-mix(in oklab, var(--c) 60%, transparent);
+    min-width: 4rem;
+    text-align: center;
+  }
+  .chi-tag {
+    font-family: var(--font-serif);
+    font-size: 1.1rem;
+    margin: 0 0 0.2rem;
+    color: var(--c);
+  }
+  .chi-desc {
+    margin: 0;
+    color: var(--color-cloud-dim);
+    line-height: 1.7;
+    font-size: 0.95rem;
+  }
+
+  .calling { text-align: center; }
+  .calling-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+  }
+  .vow {
+    font-family: var(--font-serif);
+    font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+    line-height: 1.85;
+    color: var(--color-yao);
+    margin: 0;
+    letter-spacing: 0.12em;
+  }
+  :global(html[data-locale="en"]) .vow {
+    letter-spacing: 0.04em;
+  }
+  .vow-meta {
+    color: var(--color-cloud-dim);
+    line-height: 2.1;
+    opacity: 0.85;
+  }
+  .vow-meta p { margin: 0; }
+
+  .trio-inner {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+  @media (min-width: 880px) {
+    .trio-inner { grid-template-columns: 1fr 1.4fr; gap: 5rem; }
+  }
+  .trio-cards {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+  }
+  .trio-cards li {
+    padding: 1.5rem 1.6rem;
+    border-radius: var(--radius-soft);
+    border: 1px solid rgba(255,255,255,0.08);
+    background: linear-gradient(160deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+    transition-delay: var(--delay);
+  }
+  .trio-cards h4 {
+    margin: 0 0 0.4rem;
+    font-size: 1.2rem;
+    letter-spacing: 0.18em;
+    font-family: var(--font-serif);
+  }
+  .trio-tag {
+    margin: 0 0 0.6rem;
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.32em;
+    font-size: 0.78rem;
+    color: var(--color-cloud-dim);
+  }
+  .trio-cards p:last-child {
+    margin: 0;
+    color: var(--color-cloud-dim);
+    line-height: 1.85;
+  }
+
+  .unseal-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    align-items: center;
+  }
+  @media (min-width: 880px) {
+    .unseal-grid { grid-template-columns: 1.1fr 1fr; gap: 5rem; }
+  }
+  .art {
+    border-radius: var(--radius-soft);
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), transparent);
+    aspect-ratio: 16 / 9;
+  }
+  .art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .unseal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+</style>
+
+<script>
+  import { track, Events } from "@/lib/analytics";
+  const last = document.querySelector(".unseal");
+  if (last) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            track(Events.ORIGIN_FINISHED);
+            io.disconnect();
+          }
+        }
+      },
+      { threshold: 0.5 },
+    );
+    io.observe(last);
+  }
+</script>

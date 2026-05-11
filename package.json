@@ -1,0 +1,46 @@
+{
+  "name": "wuxing-beasts-website",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "五行小兽官网 · 一座会呼吸的东方奇幻数字藏馆",
+  "scripts": {
+    "dev": "next dev",
+    "start": "next dev",
+    "gen:assets": "node scripts/generate-icons.mjs",
+    "build": "node scripts/generate-icons.mjs && next build",
+    "preview": "serve out"
+  },
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.1.14",
+    "@radix-ui/react-slot": "^1.1.1",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "gsap": "^3.13.0",
+    "lucide-react": "^0.468.0",
+    "next": "^15.3.5",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwindcss": "^4.1.14",
+    "tailwind-merge": "^2.6.0",
+    "three": "^0.171.0",
+    "typescript": "^5.7.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "serve": "^14.2.4",
+    "@types/three": "^0.171.0",
+    "sharp": "^0.34.5"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp"
+    ]
+  }
+}

@@ -1,0 +1,45 @@
+---
+interface Props {
+  eyebrow?: string;
+  title: string;
+  description?: string;
+  align?: "left" | "center";
+  as?: "h1" | "h2" | "h3";
+}
+const { eyebrow, title, description, align = "left", as: Tag = "h2" } = Astro.props;
+---
+
+<header class:list={["section-heading fade-up", `align-${align}`]}>
+  {eyebrow && <span class="eyebrow">{eyebrow}</span>}
+  <Tag class="title">{title}</Tag>
+  {description && <p class="desc">{description}</p>}
+</header>
+
+<style>
+  .section-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 50rem;
+    margin-block-end: 3rem;
+  }
+  .align-center {
+    align-items: center;
+    text-align: center;
+    margin-inline: auto;
+  }
+  .title {
+    font-size: clamp(1.6rem, 3vw, 2.5rem);
+    line-height: 1.18;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .desc {
+    color: var(--color-cloud-dim);
+    opacity: 0.85;
+    margin: 0;
+    max-width: 38rem;
+    line-height: 1.7;
+    text-wrap: pretty;
+  }
+</style>

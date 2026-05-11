@@ -1,0 +1,153 @@
+---
+import type { Locale } from "@/i18n/types";
+import { getDict, localizedPath } from "@/i18n";
+
+interface Props {
+  lang: Locale;
+}
+const { lang } = Astro.props;
+const t = getDict(lang);
+const year = new Date().getFullYear();
+
+const lulumartUrl = import.meta.env.PUBLIC_LULUMART_URL || "https://lulumart.app";
+---
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <div class="brand-block">
+      <p class="footer-mark">{t.brand.name} · {t.brand.nameLatin}</p>
+      <p class="footer-tag">{t.brand.tagline}</p>
+    </div>
+
+    <nav class="footer-nav" aria-label={t.nav.primaryAria}>
+      <div>
+        <h4>{t.footer.explore}</h4>
+        <ul>
+          <li><a href={localizedPath("/", lang)}>{t.footer.homeLink}</a></li>
+          <li><a href={localizedPath("/origin", lang)}>{t.footer.originLink}</a></li>
+          <li><a href={localizedPath("/beasts", lang)}>{t.footer.beastsLink}</a></li>
+          <li><a href={localizedPath("/series", lang)}>{t.footer.seriesLink}</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>{t.footer.resonate}</h4>
+        <ul>
+          <li><a href={localizedPath("/resonance", lang)}>{t.footer.resonanceLink}</a></li>
+          <li><a href={lulumartUrl} rel="noopener" target="_blank">{t.footer.purchaseLink}</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>{t.footer.company}</h4>
+        <ul>
+          <li><a href="https://www.xiaohongshu.com/" rel="noopener" target="_blank">{t.footer.xhsLink}</a></li>
+          <li><a href="https://weibo.com/" rel="noopener" target="_blank">{t.footer.weiboLink}</a></li>
+          <li><a href="mailto:hi@wuxing-beasts.com">{t.footer.emailLink}</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <div class="wrap footer-bottom">
+    <p>{t.footer.rightsPrefix.replace("{year}", String(year))}{t.footer.rights}</p>
+    <p class="footer-shichen" aria-live="polite"></p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: 8rem;
+    padding-block: 4rem 2rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    background: linear-gradient(180deg, transparent, rgba(0,0,0,0.4));
+  }
+
+  .footer-inner {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+
+  .footer-mark {
+    font-family: var(--font-serif);
+    font-size: 1.1rem;
+    letter-spacing: 0.18em;
+    margin: 0;
+  }
+  :global(html[data-locale="en"]) .footer-mark {
+    font-family: var(--font-display);
+    letter-spacing: 0.06em;
+  }
+  .footer-tag {
+    color: var(--color-cloud-dim);
+    opacity: 0.7;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .footer-nav {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+  .footer-nav h4 {
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--color-cloud-dim);
+    margin: 0 0 1rem;
+    opacity: 0.7;
+  }
+  .footer-nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .footer-nav a {
+    font-size: 0.9rem;
+    color: var(--color-cloud);
+    opacity: 0.85;
+    transition: opacity 0.3s var(--ease-silk);
+  }
+  .footer-nav a:hover { opacity: 1; text-decoration: underline; text-underline-offset: 4px; }
+
+  .footer-bottom {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px dashed rgba(255,255,255,0.06);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    color: var(--color-cloud-dim);
+    opacity: 0.65;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+  }
+
+  @media (min-width: 720px) {
+    .footer-inner {
+      grid-template-columns: 1fr 2fr;
+    }
+  }
+</style>
+
+<script>
+  import { getShichen, localizeShichen } from "@/lib/time";
+  import { isLocale, DEFAULT_LOCALE } from "@/i18n/types";
+  import { getDict } from "@/i18n";
+
+  const localeAttr = document.documentElement.dataset.locale;
+  const lang = isLocale(localeAttr ?? "") ? (localeAttr as "zh" | "en") : DEFAULT_LOCALE;
+
+  const el = document.querySelector<HTMLElement>(".footer-shichen");
+  if (el) {
+    const dict = getDict(lang);
+    const s = localizeShichen(getShichen(), lang);
+    el.textContent = `${dict.footer.nowLabel} · ${s.name} · ${s.vibe}`;
+  }
+</script>

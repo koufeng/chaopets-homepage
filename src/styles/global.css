@@ -1,0 +1,347 @@
+@import "tailwindcss";
+@import "./astro-migrated.css";
+
+@theme {
+  /* 五行 base palette */
+  --color-jin: #f1d687;
+  --color-jin-deep: #9b6b22;
+  --color-mu: #a8d6a8;
+  --color-mu-deep: #3f7a4a;
+  --color-shui: #9ccde8;
+  --color-shui-deep: #2d6a93;
+  --color-huo: #f5a6b8;
+  --color-huo-deep: #c2354f;
+  --color-tu: #d8b795;
+  --color-tu-deep: #7e5532;
+  --color-xuan: #7e5ba8;
+  --color-yao: #f4e2b5;
+  --color-hundun: #5c5662;
+
+  /* neutrals */
+  --color-ink: #0c0a14;
+  --color-ink-soft: #1a1624;
+  --color-mist: rgba(255, 255, 255, 0.06);
+  --color-cloud: #fbf6ec;
+  --color-cloud-dim: #e7dfd0;
+  --color-stone: #b5ac9c;
+
+  /* fonts */
+  --font-sans: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --font-serif: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
+  --font-display: "Cormorant Garamond", "Noto Serif SC", "Songti SC", serif;
+
+  /* radii */
+  --radius-soft: 1.25rem;
+  --radius-pill: 999px;
+
+  /* easing */
+  --ease-silk: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    --shichen-1: #0e1530;
+    --shichen-2: #1f2a55;
+    --shichen-3: #3d4f8a;
+    --aura-opacity: 0.92;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+
+  html,
+  body {
+    background: var(--color-ink);
+    color: var(--color-cloud);
+    font-family: var(--font-sans);
+    margin: 0;
+    min-height: 100%;
+  }
+
+  body {
+    overflow-x: hidden;
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+  }
+
+  ::selection {
+    background: rgba(244, 226, 181, 0.4);
+    color: var(--color-ink);
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--color-cloud);
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  img {
+    -webkit-user-drag: none;
+    user-select: none;
+  }
+
+  button {
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ---------- 时辰光晕 / Shichen aura ---------- */
+
+.shichen-aura {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 50% 0%, var(--shichen-3) 0%, transparent 60%),
+    radial-gradient(80% 70% at 80% 100%, var(--shichen-2) 0%, transparent 60%),
+    linear-gradient(180deg, var(--shichen-1) 0%, var(--color-ink) 80%);
+  opacity: var(--aura-opacity);
+  transition: background 1.6s var(--ease-silk), opacity 1.6s var(--ease-silk);
+}
+
+.shichen-aura::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    radial-gradient(rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 96px 96px, 220px 220px;
+  background-position: 0 0, 32px 18px;
+  mix-blend-mode: screen;
+  opacity: 0.45;
+}
+
+.scrim-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(140% 100% at 50% 50%, transparent 55%, rgba(0,0,0,0.55) 100%);
+}
+
+/* ---------- 粒子层基础 / Particle layers ---------- */
+
+.particle-field {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(0.4px);
+  will-change: transform, opacity;
+  opacity: 0;
+  animation: particle-float linear infinite;
+}
+
+@keyframes particle-float {
+  0%   { transform: translate3d(0, 0, 0) scale(0.6); opacity: 0; }
+  10%  { opacity: 1; }
+  85%  { opacity: 0.9; }
+  100% { transform: translate3d(var(--px, 30px), var(--py, -120vh), 0) scale(1); opacity: 0; }
+}
+
+@keyframes orbit {
+  from { transform: rotate(0deg) translateX(var(--r, 40px)) rotate(0deg); }
+  to   { transform: rotate(360deg) translateX(var(--r, 40px)) rotate(-360deg); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: translateY(0) scale(1); filter: brightness(1); }
+  50%      { transform: translateY(-8px) scale(1.02); filter: brightness(1.06); }
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.5; }
+  50%      { opacity: 1; }
+}
+
+/* ---------- 共用容器 / layout helpers ---------- */
+
+.wrap {
+  width: 100%;
+  max-width: 78rem;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .wrap {
+    padding-inline: 2.5rem;
+  }
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--color-cloud-dim);
+  opacity: 0.78;
+}
+
+.eyebrow::before {
+  content: "";
+  width: 1.5rem;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+.glass {
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(18px) saturate(120%);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
+}
+
+.ink-card {
+  background: linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015));
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-soft);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.85rem 1.5rem;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  letter-spacing: 0.18em;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.04);
+  color: var(--color-cloud);
+  transition: transform 0.4s var(--ease-silk),
+              background 0.4s var(--ease-silk),
+              border-color 0.4s var(--ease-silk),
+              box-shadow 0.4s var(--ease-silk);
+}
+
+.btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.32);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 32px -16px rgba(255, 220, 160, 0.4);
+}
+
+.btn-primary {
+  background: linear-gradient(120deg, var(--color-yao) 0%, var(--color-jin) 50%, var(--color-huo) 100%);
+  color: var(--color-ink);
+  border-color: transparent;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 18px 38px -14px rgba(244, 226, 181, 0.55);
+}
+
+.btn-ghost {
+  border-color: rgba(255,255,255,0.14);
+  background: transparent;
+}
+
+.divider-flow {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  margin-block: 4rem;
+}
+
+.text-balance { text-wrap: balance; }
+.text-pretty  { text-wrap: pretty; }
+
+/* ---------- 角色卡 ---------- */
+
+.beast-tilt {
+  transform-style: preserve-3d;
+  transition: transform 0.4s var(--ease-silk);
+}
+
+.beast-shadow {
+  position: absolute;
+  bottom: 6%;
+  left: 50%;
+  width: 60%;
+  height: 14%;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0.55), transparent 70%);
+  filter: blur(8px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ---------- 滚动叙事 ---------- */
+
+.scene {
+  position: relative;
+  min-height: 90vh;
+  display: flex;
+  align-items: center;
+  padding-block: 8rem;
+}
+
+@media (max-width: 720px) {
+  .scene {
+    min-height: auto;
+    padding-block: 5rem;
+  }
+}
+
+/* 渐进增强：JS 可用时才隐藏，避免 SR / no-JS 用户看不到内容 */
+.js .fade-up {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.9s var(--ease-silk), transform 0.9s var(--ease-silk);
+  transition-delay: var(--delay, 0s);
+}
+
+.js .fade-up.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---------- 实用 ---------- */
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

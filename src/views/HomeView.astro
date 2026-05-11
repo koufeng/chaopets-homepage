@@ -1,0 +1,371 @@
+---
+import Base from "@/layouts/Base.astro";
+import HomeHero from "@/components/HomeHero.astro";
+import BeastCard from "@/components/BeastCard.astro";
+import SectionHeading from "@/components/SectionHeading.astro";
+import { Image } from "astro:assets";
+import {
+  wuxingBeasts,
+  specialBeasts,
+  groupShot,
+  localizeBeast,
+} from "@/data/beasts";
+import { getDict, localizedPath } from "@/i18n";
+import type { Locale } from "@/i18n/types";
+
+interface Props {
+  lang: Locale;
+}
+const { lang } = Astro.props;
+const t = getDict(lang);
+
+const localizedWuxing = wuxingBeasts.map((b) => localizeBeast(b, lang));
+const localizedSpecial = specialBeasts.map((b) => localizeBeast(b, lang));
+
+const lulumartUrl = import.meta.env.PUBLIC_LULUMART_URL || "https://lulumart.app";
+---
+
+<Base
+  lang={lang}
+  title={t.meta.homeTitle}
+  description={t.meta.homeDesc}
+  pageId="home"
+  logicalPath="/"
+  noHeader
+>
+  <HomeHero lang={lang} />
+
+  <!-- 起源故事 节选 -->
+  <section id="origin" class="scene fade-up">
+    <div class="wrap origin-grid">
+      <div class="copy">
+        <SectionHeading
+          eyebrow={t.home.originEyebrow}
+          title={t.home.originTitle}
+          description={t.home.originDesc}
+        />
+        <p class="invocation">
+          <em>{t.home.originVow}</em>
+        </p>
+        <p class="meta">{t.home.originMeta}</p>
+        <a href={localizedPath("/origin", lang)} class="btn btn-ghost">{t.home.originMore}</a>
+      </div>
+      <aside class="origin-aside" aria-hidden="true">
+        <div class="seal">
+          <span class="seal-zh">五</span>
+          <span class="seal-zh">行</span>
+        </div>
+        <div class="vert" aria-hidden="true">
+          <span>木</span><span>火</span><span>土</span><span>金</span><span>水</span>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <hr class="divider-flow" />
+
+  <!-- 八灵图鉴 -->
+  <section class="scene archive">
+    <div class="wrap">
+      <SectionHeading
+        eyebrow={t.home.archiveEyebrow}
+        title={t.home.archiveTitle}
+        description={t.home.archiveDesc}
+        align="center"
+      />
+
+      <div class="archive-row archive-five">
+        {localizedWuxing.map((beast) => (
+          <BeastCard beast={beast} lang={lang} size="md" showStory />
+        ))}
+      </div>
+
+      <div class="archive-divider" aria-hidden="true">
+        <span class="line"></span>
+        <span class="char">{t.home.archiveTrioDivider}</span>
+        <span class="line"></span>
+      </div>
+
+      <div class="archive-row archive-three">
+        {localizedSpecial.map((beast) => (
+          <BeastCard beast={beast} lang={lang} size="md" showStory />
+        ))}
+      </div>
+
+      <div class="archive-cta fade-up">
+        <a href={localizedPath("/beasts", lang)} class="btn">{t.home.archiveAll}</a>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider-flow" />
+
+  <!-- 古灵新生 系列预告 -->
+  <section class="scene series">
+    <div class="wrap series-grid">
+      <div class="copy fade-up">
+        <SectionHeading
+          eyebrow={t.home.seriesEyebrow}
+          title={t.home.seriesTitle}
+          description={t.home.seriesDesc}
+        />
+        <ul class="series-points">
+          {t.home.seriesPoints.map((point) => (
+            <li><span>·</span>{point}</li>
+          ))}
+        </ul>
+        <div class="series-actions">
+          <a
+            href={lulumartUrl}
+            class="btn btn-primary"
+            rel="noopener"
+            target="_blank"
+            data-event="series_outlink"
+          >
+            {t.home.seriesCtaPrimary}
+            <span aria-hidden="true">↗</span>
+          </a>
+          <a href={localizedPath("/series", lang)} class="btn btn-ghost">{t.home.seriesCtaSecondary}</a>
+        </div>
+      </div>
+
+      <div class="series-art fade-up">
+        <div class="art-frame">
+          <Image
+            src={groupShot}
+            alt={t.home.seriesCaption}
+            width={1080}
+            height={520}
+            densities={[1, 1.5, 2]}
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+        <p class="art-cap">{t.home.seriesCaption}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 灵兽共鸣 终结 CTA -->
+  <section class="scene final-cta fade-up">
+    <div class="wrap final-inner">
+      <p class="eyebrow">{t.home.finalEyebrow}</p>
+      <h2 class="final-title">{t.home.finalTitle}</h2>
+      <p class="final-tag">{t.home.finalTag}</p>
+      <a href={localizedPath("/resonance", lang)} class="btn btn-primary final-btn" data-event="final_resonance_cta">
+        {t.home.finalCta}
+        <span aria-hidden="true">→</span>
+      </a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .origin-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    align-items: center;
+  }
+  .origin-grid .copy {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+    max-width: 36rem;
+  }
+  .origin-grid .invocation {
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    line-height: 1.6;
+    color: var(--color-yao);
+    opacity: 0.95;
+    margin: 0;
+    letter-spacing: 0.12em;
+  }
+  .origin-grid .meta {
+    color: var(--color-cloud-dim);
+    line-height: 1.85;
+    margin: 0;
+  }
+
+  .origin-aside {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    max-width: 26rem;
+    margin-inline: auto;
+  }
+  .seal {
+    position: absolute;
+    inset: 12%;
+    border: 1px solid rgba(255, 220, 160, 0.4);
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: radial-gradient(circle at 30% 30%, rgba(241, 214, 135, 0.25), transparent 60%);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: inset 0 0 80px rgba(241, 214, 135, 0.15), 0 30px 80px -40px rgba(241, 214, 135, 0.4);
+    animation: breathe 8s ease-in-out infinite;
+  }
+  .seal-zh {
+    font-family: var(--font-serif);
+    font-size: clamp(3rem, 7vw, 5rem);
+    color: var(--color-yao);
+    letter-spacing: 0.2em;
+  }
+  .seal-zh:last-child {
+    margin-top: -1rem;
+    color: var(--color-jin);
+    opacity: 0.85;
+  }
+  .vert {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    writing-mode: vertical-rl;
+    font-family: var(--font-serif);
+    font-size: 0.95rem;
+    letter-spacing: 0.7em;
+    color: var(--color-cloud-dim);
+    opacity: 0.6;
+  }
+  .vert span { display: inline-block; }
+
+  @media (min-width: 880px) {
+    .origin-grid {
+      grid-template-columns: 1.2fr 1fr;
+      gap: 5rem;
+    }
+  }
+
+  .archive-row {
+    display: grid;
+    gap: 1.5rem;
+  }
+  .archive-five { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .archive-three {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    max-width: 60rem;
+    margin-inline: auto;
+  }
+  @media (min-width: 1100px) {
+    .archive-five { grid-template-columns: repeat(5, 1fr); }
+    .archive-three { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  .archive-divider {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-block: 4rem 3rem;
+  }
+  .archive-divider .line {
+    flex: 1;
+    max-width: 18rem;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  }
+  .archive-divider .char {
+    font-family: var(--font-serif);
+    letter-spacing: 0.5em;
+    color: var(--color-cloud-dim);
+    font-size: 1rem;
+  }
+
+  .archive-cta {
+    margin-top: 4rem;
+    display: flex;
+    justify-content: center;
+  }
+
+  .series-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    align-items: center;
+  }
+  @media (min-width: 880px) {
+    .series-grid { grid-template-columns: 1fr 1.1fr; gap: 5rem; }
+  }
+
+  .series-points {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .series-points li {
+    display: flex;
+    gap: 0.75rem;
+    color: var(--color-cloud-dim);
+    line-height: 1.7;
+    font-size: 0.95rem;
+  }
+  .series-points span { color: var(--color-yao); }
+
+  .series-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 1.4rem;
+  }
+
+  .art-frame {
+    position: relative;
+    border-radius: var(--radius-soft);
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01));
+    aspect-ratio: 16 / 9;
+  }
+  .art-frame::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(60% 60% at 50% 100%, rgba(0,0,0,0.55), transparent 70%);
+    pointer-events: none;
+  }
+  .art-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .art-cap {
+    text-align: center;
+    margin-top: 0.8rem;
+    font-family: var(--font-display);
+    letter-spacing: 0.3em;
+    color: var(--color-cloud-dim);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+  }
+
+  .final-cta {
+    text-align: center;
+    padding-block: 8rem;
+  }
+  .final-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2rem;
+    max-width: 36rem;
+    margin-inline: auto;
+  }
+  .final-title {
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    line-height: 1.25;
+    margin: 0.5rem 0 0;
+  }
+  .final-tag {
+    color: var(--color-cloud-dim);
+    line-height: 1.85;
+    margin: 0;
+  }
+  .final-btn { padding: 1.05rem 2rem; font-size: 1rem; }
+</style>

@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./astro-migrated.css";
+@import "./home-redesign.css";
 
 @theme {
   /* 五行 base palette */

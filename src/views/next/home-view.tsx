@@ -1,74 +1,507 @@
-import Image from "next/image";
+"use client";
+
+import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+import type { CSSProperties, PointerEvent } from "react";
 import type { Locale } from "@/i18n/types";
-import { getDict, localizedPath } from "@/i18n";
-import { groupShot, localizeBeast, specialBeasts, wuxingBeasts } from "@/data/beasts";
+import { localizedPath } from "@/i18n";
 import { PageShell } from "@/components/next/page-shell";
-import { HomeHero } from "@/components/next/home-hero";
-import { BeastCard } from "@/components/next/beast-card";
-import { SectionHeading } from "@/components/next/section-heading";
+
+import logoBlack from "@/assets/images/logo-black.png";
+import logoWhite from "@/assets/images/logo-white.png";
+import bannerNivi from "@/assets/images/banner-nivi.png";
+import bannerSuki from "@/assets/images/banner-suki.png";
+import bannerGoya from "@/assets/images/banner-goya.png";
+import bannerYellen from "@/assets/images/banner-yellen.png";
+import bannerNora from "@/assets/images/banner-nora.png";
+import bannerXuan from "@/assets/images/banner-xuan.png";
+import bannerYao from "@/assets/images/banner-yao.png";
+import bannerHundun from "@/assets/images/banner-hundun.png";
+import boothNoraBg from "@/assets/images/booth-nora-bg.png";
+import packaging from "@/assets/images/packaging.png";
+import phone1 from "@/assets/images/phone-1.png";
+import phone2 from "@/assets/images/phone-2.png";
+
+import nora0001 from "@/assets/images/nora/0001.png";
+import nora0002 from "@/assets/images/nora/0002.png";
+import nora0003 from "@/assets/images/nora/0003.png";
+import nora0004 from "@/assets/images/nora/0004.png";
+import nora0005 from "@/assets/images/nora/0005.png";
+import nora0006 from "@/assets/images/nora/0006.png";
+import nora0007 from "@/assets/images/nora/0007.png";
+import nora0008 from "@/assets/images/nora/0008.png";
+import nora0009 from "@/assets/images/nora/0009.png";
+import nora0010 from "@/assets/images/nora/00010.png";
+import nora0011 from "@/assets/images/nora/00011.png";
+import nora0012 from "@/assets/images/nora/00012.png";
+import nora0013 from "@/assets/images/nora/00013.png";
+import nora0014 from "@/assets/images/nora/00014.png";
+import nora0015 from "@/assets/images/nora/00015.png";
+import nora0016 from "@/assets/images/nora/00016.png";
+import nora0017 from "@/assets/images/nora/00017.png";
+import nora0018 from "@/assets/images/nora/00018.png";
+import nora0019 from "@/assets/images/nora/00019.png";
+import nora0020 from "@/assets/images/nora/00020.png";
+import nora0021 from "@/assets/images/nora/00021.png";
+import nora0022 from "@/assets/images/nora/00022.png";
+import nora0023 from "@/assets/images/nora/00023.png";
+import nora0024 from "@/assets/images/nora/00024.png";
+import nora0025 from "@/assets/images/nora/00025.png";
+import nora0026 from "@/assets/images/nora/00026.png";
+import nora0027 from "@/assets/images/nora/00027.png";
+import nora0028 from "@/assets/images/nora/00028.png";
+import nora0029 from "@/assets/images/nora/00029.png";
+import nora0030 from "@/assets/images/nora/00030.png";
+import nora0031 from "@/assets/images/nora/00031.png";
+import nora0032 from "@/assets/images/nora/00032.png";
+import nora0033 from "@/assets/images/nora/00033.png";
+import nora0034 from "@/assets/images/nora/00034.png";
+import nora0035 from "@/assets/images/nora/00035.png";
+import nora0036 from "@/assets/images/nora/00036.png";
+
+type BeastProfile = {
+  slug: string;
+  name: string;
+  zhName: string;
+  number: string;
+  element: string;
+  mood: string;
+  role: string;
+  intro: string;
+  gradient: [string, string];
+  archiveBg: string;
+  image: StaticImageData;
+};
+
+const beasts: BeastProfile[] = [
+  {
+    slug: "nivi",
+    name: "NIVI",
+    zhName: "金 金",
+    number: "001",
+    element: "METAL · 金",
+    mood: "锋芒未藏",
+    role: "Bright edge",
+    intro: "一寸光，一寸锋。它把判断力藏进柔软毛绒里，只在必要时发出清亮的回响。",
+    gradient: ["#F7E3B4", "#F4BEBB"],
+    archiveBg: "#FFF7E5",
+    image: bannerNivi,
+  },
+  {
+    slug: "suki",
+    name: "SUKI",
+    zhName: "木 木",
+    number: "002",
+    element: "WOOD · 木",
+    mood: "慢慢复原",
+    role: "Quiet growth",
+    intro: "春不语，自有花来。Suki 总在细小处生长，把被忽略的心情重新扶正。",
+    gradient: ["#B2E9CC", "#BBCEF4"],
+    archiveBg: "#E0F9E5",
+    image: bannerSuki,
+  },
+  {
+    slug: "goya",
+    name: "GOYA",
+    zhName: "水 水",
+    number: "003",
+    element: "WATER · 水",
+    mood: "情绪共振",
+    role: "Soft tide",
+    intro: "它不替你哭，只让你流。Goya 靠近所有冷暖，把情绪整理成透明潮汐。",
+    gradient: ["#ADE3F5", "#D9CFFF"],
+    archiveBg: "#EEFAFF",
+    image: bannerGoya,
+  },
+  {
+    slug: "yellen",
+    name: "YELLEN",
+    zhName: "火 灵",
+    number: "004",
+    element: "FIRE · 火",
+    mood: "明亮热望",
+    role: "One bright second",
+    intro: "哪怕只有一秒，也要明亮地烧。Yellen 讨厌冷场，也最懂被看见的勇气。",
+    gradient: ["#A0B5F8", "#F7BFDA"],
+    archiveBg: "#FFEEEE",
+    image: bannerYellen,
+  },
+  {
+    slug: "nora",
+    name: "NORA",
+    zhName: "土 土",
+    number: "005",
+    element: "EARTH · 土",
+    mood: "稳，不慌",
+    role: "Grounded keeper",
+    intro: "慢一点没事，山也是这样长起来的。Nora 把日子重新种回土里。",
+    gradient: ["#E9CCB2", "#F4BBBB"],
+    archiveBg: "#F2E3D2",
+    image: bannerNora,
+  },
+  {
+    slug: "xuan",
+    name: "XUAN",
+    zhName: "玄",
+    number: "006",
+    element: "YIN · 阴",
+    mood: "静谧守夜",
+    role: "Inward night",
+    intro: "夜很深，但夜也很懂。Xuan 在灯灭之处出现，听见你最里面的话。",
+    gradient: ["#D9DCED", "#B7A3CC"],
+    archiveBg: "#F2E3D2",
+    image: bannerXuan,
+  },
+  {
+    slug: "yao",
+    name: "YAO",
+    zhName: "曜",
+    number: "007",
+    element: "YANG · 阳",
+    mood: "烈日高歌",
+    role: "Sunlit signal",
+    intro: "我为你掀开云。Yao 把心里的好天气照出来，也让别人被看见。",
+    gradient: ["#D5E7D4", "#A3B5CC"],
+    archiveBg: "#E9EFE0",
+    image: bannerYao,
+  },
+  {
+    slug: "hundun",
+    name: "HUNDUN",
+    zhName: "混 沌",
+    number: "008",
+    element: "VOID · 混沌",
+    mood: "五行归一",
+    role: "Hidden contract",
+    intro: "一切边界尚未命名时，Hundun 已经醒来。它保存混乱，也保存可能。",
+    gradient: ["#E0DDD7", "#B9B4C1"],
+    archiveBg: "#EBEBEB",
+    image: bannerHundun,
+  },
+];
+
+const noraFrames = [
+  nora0001,
+  nora0002,
+  nora0003,
+  nora0004,
+  nora0005,
+  nora0006,
+  nora0007,
+  nora0008,
+  nora0009,
+  nora0010,
+  nora0011,
+  nora0012,
+  nora0013,
+  nora0014,
+  nora0015,
+  nora0016,
+  nora0017,
+  nora0018,
+  nora0019,
+  nora0020,
+  nora0021,
+  nora0022,
+  nora0023,
+  nora0024,
+  nora0025,
+  nora0026,
+  nora0027,
+  nora0028,
+  nora0029,
+  nora0030,
+  nora0031,
+  nora0032,
+  nora0033,
+  nora0034,
+  nora0035,
+  nora0036,
+];
+
+function nextIndex(value: number, offset: number) {
+  return (value + offset + beasts.length) % beasts.length;
+}
+
+function HomeCarousel({ lang }: { lang: Locale }) {
+  const [active, setActive] = useState(7);
+  const current = beasts[active];
+  const preview = [1, 2].map((offset) => beasts[nextIndex(active, offset)]);
+  const vars = {
+    "--hero-a": current.gradient[0],
+    "--hero-b": current.gradient[1],
+  } as CSSProperties;
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setActive((value) => nextIndex(value, 1)), 7800);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  return (
+    <section className="wx-hero" style={vars} aria-label="Wuxing Beasts banner">
+      <header className="wx-header">
+        <Link className="wx-logo-link" href={localizedPath("/", lang)} aria-label="五行小兽首页">
+          <Image src={logoBlack} alt="Wuxing Beasts" width={100} height={41} priority />
+        </Link>
+        <nav className="wx-nav" aria-label="Main">
+          <a href="#origin">起源</a>
+          <a href="#archive">档案馆</a>
+          <a href="#portrait">灵兽志</a>
+          <a href="#reborn">抽盒</a>
+          <a href="#world">共鸣</a>
+        </nav>
+      </header>
+
+      <div className="wx-hero-grid">
+        <div className="wx-hero-copy">
+          <h1>
+            <span>Wǔ</span>
+            <span>Xíng</span>
+            <span>Beasts</span>
+          </h1>
+          <p>
+            相传上古之时，天地初分，金、木、水、火、土五行之气化生万物。
+            星轨交错、灵脉震颤之时，藏匿其间的小兽便会苏醒。
+          </p>
+          <div className="wx-hero-stats" aria-label="Collection stats">
+            <span><strong>5,142</strong> 已共鸣灵兽</span>
+            <span><strong>08</strong> 元素本体</span>
+            <span><strong>∞</strong> 数字限定款</span>
+          </div>
+          <div className="wx-hero-actions">
+            <Link href={localizedPath("/resonance", lang)}>灵兽共鸣测试</Link>
+            <a href="#origin">小兽世界观</a>
+          </div>
+        </div>
+
+        <div className="wx-hero-stage" aria-live="polite">
+          <div className="wx-hero-name-mask">
+            <div key={current.slug} className="wx-hero-name">{current.name}</div>
+          </div>
+          <div className="wx-pet-stack">
+            {beasts.map((beast) => (
+              <Image
+                key={beast.slug}
+                src={beast.image}
+                alt={beast.name}
+                width={1000}
+                height={1000}
+                className={beast.slug === current.slug ? "is-active" : ""}
+                priority={beast.slug === "hundun"}
+              />
+            ))}
+          </div>
+
+          <article key={`${current.slug}-info`} className="wx-current-info">
+            <span>№ {current.number}</span>
+            <h2>{current.zhName}</h2>
+            <p>{current.element}</p>
+          </article>
+
+          <div className="wx-card-rail" aria-label="Pet carousel controls">
+            {preview.map((beast, index) => (
+              <button
+                key={beast.slug}
+                type="button"
+                className="wx-hero-card"
+                style={{ "--card-a": beast.gradient[0], "--card-b": beast.gradient[1] } as CSSProperties}
+                onClick={() => setActive((value) => nextIndex(value, 1))}
+              >
+                <span>{beast.name}</span>
+                <Image src={beast.image} alt="" width={220} height={220} />
+                <em>{String(index + 1).padStart(2, "0")}</em>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function NoraTurntable() {
+  const [frame, setFrame] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const drag = useRef({ active: false, x: 0, moved: false });
+
+  useEffect(() => {
+    if (paused) return;
+    const timer = window.setInterval(() => setFrame((value) => (value + 1) % noraFrames.length), 80);
+    return () => window.clearInterval(timer);
+  }, [paused]);
+
+  const onPointerDown = (event: PointerEvent<HTMLButtonElement>) => {
+    drag.current = { active: true, x: event.clientX, moved: false };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setPaused(true);
+  };
+
+  const onPointerMove = (event: PointerEvent<HTMLButtonElement>) => {
+    if (!drag.current.active) return;
+    const delta = event.clientX - drag.current.x;
+    if (Math.abs(delta) < 8) return;
+    drag.current = { active: true, x: event.clientX, moved: true };
+    setFrame((value) => (value + (delta > 0 ? -1 : 1) + noraFrames.length) % noraFrames.length);
+  };
+
+  const onPointerUp = (event: PointerEvent<HTMLButtonElement>) => {
+    if (!drag.current.moved) {
+      setFrame((value) => (value + 1) % noraFrames.length);
+    }
+    drag.current.active = false;
+    event.currentTarget.releasePointerCapture(event.pointerId);
+  };
+
+  return (
+    <button
+      type="button"
+      className="wx-turntable"
+      aria-label="拖拽或点击旋转 Nora"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+    >
+      <Image src={noraFrames[frame]} alt="360 portrait of Nora" width={500} height={500} priority={false} />
+    </button>
+  );
+}
 
 export function HomeView({ lang }: { lang: Locale }) {
-  const t = getDict(lang);
-  const localizedWuxing = wuxingBeasts.map((b) => localizeBeast(b, lang));
-  const localizedSpecial = specialBeasts.map((b) => localizeBeast(b, lang));
   const lulumartUrl = process.env.NEXT_PUBLIC_LULUMART_URL || "https://lulumart.app";
 
   return (
-    <PageShell lang={lang} pageId="home" noHeader>
-      <HomeHero lang={lang} />
-      <section id="origin" className="scene fade-up">
-        <div className="wrap origin-grid">
-          <div className="copy">
-            <SectionHeading eyebrow={t.home.originEyebrow} title={t.home.originTitle} description={t.home.originDesc} />
-            <p className="invocation"><em>{t.home.originVow}</em></p>
-            <p className="meta">{t.home.originMeta}</p>
-            <Link href={localizedPath("/origin", lang)} className="btn btn-ghost">{t.home.originMore}</Link>
-          </div>
-          <aside className="origin-aside" aria-hidden="true">
-            <div className="seal"><span className="seal-zh">五</span><span className="seal-zh">行</span></div>
-            <div className="vert"><span>木</span><span>火</span><span>土</span><span>金</span><span>水</span></div>
-          </aside>
-        </div>
-      </section>
+    <PageShell lang={lang} pageId="home-redesign" noHeader noFooter noAura>
+      <div className="wx-home">
+        <HomeCarousel lang={lang} />
 
-      <hr className="divider-flow" />
-      <section className="scene archive">
-        <div className="wrap">
-          <SectionHeading eyebrow={t.home.archiveEyebrow} title={t.home.archiveTitle} description={t.home.archiveDesc} align="center" />
-          <div className="archive-row archive-five">{localizedWuxing.map((beast) => <BeastCard key={beast.id} beast={beast} lang={lang} showStory />)}</div>
-          <div className="archive-divider" aria-hidden="true"><span className="line" /><span className="char">{t.home.archiveTrioDivider}</span><span className="line" /></div>
-          <div className="archive-row archive-three">{localizedSpecial.map((beast) => <BeastCard key={beast.id} beast={beast} lang={lang} showStory />)}</div>
-          <div className="archive-cta fade-up"><Link href={localizedPath("/beasts", lang)} className="btn">{t.home.archiveAll}</Link></div>
-        </div>
-      </section>
-
-      <hr className="divider-flow" />
-      <section className="scene series">
-        <div className="wrap series-grid">
-          <div className="copy fade-up">
-            <SectionHeading eyebrow={t.home.seriesEyebrow} title={t.home.seriesTitle} description={t.home.seriesDesc} />
-            <ul className="series-points">{t.home.seriesPoints.map((point) => <li key={point}><span>·</span>{point}</li>)}</ul>
-            <div className="series-actions">
-              <a href={lulumartUrl} className="btn btn-primary" rel="noopener" target="_blank" data-event="series_outlink">{t.home.seriesCtaPrimary}<span aria-hidden="true">↗</span></a>
-              <Link href={localizedPath("/series", lang)} className="btn btn-ghost">{t.home.seriesCtaSecondary}</Link>
+        <section id="origin" className="wx-origin">
+          <div className="wx-section-inner wx-origin-grid">
+            <div>
+              <p className="wx-kicker">ORIGIN · 起源</p>
+              <h2>起源</h2>
+              <p>
+                天地初分，五行生息。小兽并非被召唤而来，它们原本就藏在人的情绪、时间与物件之间。
+                当某个心愿足够清晰，契约便会亮起。
+              </p>
+              <a className="wx-text-link" href="#archive">Meet all eight</a>
+            </div>
+            <div className="wx-origin-note">
+              <span>Wuxing spirits wake where daily life brushes against myth.</span>
             </div>
           </div>
-          <div className="series-art fade-up">
-            <div className="art-frame"><Image src={groupShot} alt={t.home.seriesCaption} width={1080} height={520} loading="lazy" /></div>
-            <p className="art-cap">{t.home.seriesCaption}</p>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="scene final-cta fade-up">
-        <div className="wrap final-inner">
-          <p className="eyebrow">{t.home.finalEyebrow}</p>
-          <h2 className="final-title">{t.home.finalTitle}</h2>
-          <p className="final-tag">{t.home.finalTag}</p>
-          <Link href={localizedPath("/resonance", lang)} className="btn btn-primary final-btn" data-event="final_resonance_cta">{t.home.finalCta}<span aria-hidden="true">→</span></Link>
-        </div>
-      </section>
+        <section id="archive" className="wx-archive">
+          <div className="wx-section-inner">
+            <p className="wx-kicker">CHARACTER ARCHIVE</p>
+            <h2>角色档案馆</h2>
+            <div className="wx-archive-grid">
+              {beasts.map((beast) => (
+                <article key={beast.slug} className="wx-archive-card" style={{ background: beast.archiveBg }}>
+                  <span>№ {beast.number}</span>
+                  <em>{beast.element}</em>
+                  <Image src={beast.image} alt={beast.name} width={420} height={420} />
+                  <h3>{beast.zhName}</h3>
+                  <p>{beast.name}</p>
+                  <small>情绪 · {beast.mood}</small>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="portrait" className="wx-portrait">
+          <div className="wx-portrait-media">
+            <Image src={boothNoraBg} alt="" fill sizes="(max-width: 900px) 100vw, 50vw" />
+            <NoraTurntable />
+          </div>
+          <div className="wx-portrait-copy">
+            <p className="wx-kicker">SPOTLIGHT · № 005</p>
+            <h2>
+              360° portrait of <span>Yellen</span>.
+            </h2>
+            <h3>土 土</h3>
+            <p>
+              这一屏保留设计稿标题，同时使用 Nora 的展台背景与序列帧资源。默认自动旋转，鼠标移入暂停，拖拽或点击即可手动播放帧序列。
+            </p>
+            <div className="wx-detail-row">
+              <span><b>ELEMENT</b>土 · 承载</span>
+              <span><b>EMOTION</b>稳，不慌</span>
+              <span><b>SOUND</b>轻软呼吸</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="reborn" className="wx-reborn">
+          <div className="wx-section-inner wx-reborn-grid">
+            <div>
+              <p className="wx-kicker">VINYL MINI FIGURE</p>
+              <h2>古灵新生</h2>
+              <p>
+                The ritual of summoning, now pocket-sized. 每一次开盒，都是一次与五行情绪重新缔约。
+              </p>
+              <div className="wx-hero-actions">
+                <a href={lulumartUrl} target="_blank" rel="noopener">前往抽盒</a>
+                <Link href={localizedPath("/series", lang)}>系列详情</Link>
+              </div>
+            </div>
+            <Image src={packaging} alt="Wuxing Beasts packaging" width={631} height={694} />
+          </div>
+        </section>
+
+        <section id="world" className="wx-phones">
+          <div className="wx-section-inner">
+            <p className="wx-kicker">MOBILE CONTRACT</p>
+            <h2>Same world, smaller palm.</h2>
+            <div className="wx-phone-pair">
+              <Image src={phone1} alt="Wuxing Beasts mobile home" width={380} height={730} />
+              <Image src={phone2} alt="Wuxing Beasts mobile contract" width={380} height={730} />
+            </div>
+          </div>
+        </section>
+
+        <footer id="footer" className="wx-footer">
+          <div className="wx-footer-main">
+            <div className="wx-footer-brand">
+              <Image src={logoWhite} alt="Wuxing Beasts" width={100} height={41} />
+              <p>一座能呼吸的东方奇幻数字藏馆。山海集 © 2026 — 持续生长中。</p>
+            </div>
+
+            <nav className="wx-footer-nav" aria-label="Footer">
+              <div>
+                <h3>NAVIGATE 探索</h3>
+                <a href="#origin">起源故事</a>
+                <a href="#archive">角色档案馆</a>
+                <a href="#portrait">灵兽志</a>
+                <a href="#reborn">古灵新生</a>
+              </div>
+              <div>
+                <h3>COMMUNITY 共鸣</h3>
+                <a href="https://www.xiaohongshu.com/" target="_blank" rel="noopener">小红书 @五行小兽</a>
+                <a href="https://weibo.com/" target="_blank" rel="noopener">微博 @山海集</a>
+                <a href="https://www.douyin.com/" target="_blank" rel="noopener">抖音 @wuxingbeasts</a>
+                <a href="https://discord.com/" target="_blank" rel="noopener">Discord</a>
+              </div>
+              <div>
+                <h3>OFFICIAL 官方</h3>
+                <a href={lulumartUrl} target="_blank" rel="noopener">lulumart.app · 抽盒</a>
+                <a href="mailto:dev@wuxing-beasts.com">开发者支持</a>
+                <a href="mailto:bd@wuxing-beasts.com">合作 · BD</a>
+                <a href="#privacy">隐私 · 条款</a>
+              </div>
+            </nav>
+          </div>
+
+          <div className="wx-footer-bottom">
+            <span>© 2026 SHANHAIJI · 山海集</span>
+            <span>WǓ XÍNG BEASTS · ALL EIGHT BEASTS, ALL CONTRACTS HONORED.</span>
+            <span>v 1.0 · MAY 2026</span>
+          </div>
+        </footer>
+      </div>
     </PageShell>
   );
 }

@@ -23,43 +23,6 @@ import packaging from "@/assets/images/packaging.png";
 import phone1 from "@/assets/images/phone-1.png";
 import phone2 from "@/assets/images/phone-2.png";
 
-import nora0001 from "@/assets/images/nora/0001.png";
-import nora0002 from "@/assets/images/nora/0002.png";
-import nora0003 from "@/assets/images/nora/0003.png";
-import nora0004 from "@/assets/images/nora/0004.png";
-import nora0005 from "@/assets/images/nora/0005.png";
-import nora0006 from "@/assets/images/nora/0006.png";
-import nora0007 from "@/assets/images/nora/0007.png";
-import nora0008 from "@/assets/images/nora/0008.png";
-import nora0009 from "@/assets/images/nora/0009.png";
-import nora0010 from "@/assets/images/nora/00010.png";
-import nora0011 from "@/assets/images/nora/00011.png";
-import nora0012 from "@/assets/images/nora/00012.png";
-import nora0013 from "@/assets/images/nora/00013.png";
-import nora0014 from "@/assets/images/nora/00014.png";
-import nora0015 from "@/assets/images/nora/00015.png";
-import nora0016 from "@/assets/images/nora/00016.png";
-import nora0017 from "@/assets/images/nora/00017.png";
-import nora0018 from "@/assets/images/nora/00018.png";
-import nora0019 from "@/assets/images/nora/00019.png";
-import nora0020 from "@/assets/images/nora/00020.png";
-import nora0021 from "@/assets/images/nora/00021.png";
-import nora0022 from "@/assets/images/nora/00022.png";
-import nora0023 from "@/assets/images/nora/00023.png";
-import nora0024 from "@/assets/images/nora/00024.png";
-import nora0025 from "@/assets/images/nora/00025.png";
-import nora0026 from "@/assets/images/nora/00026.png";
-import nora0027 from "@/assets/images/nora/00027.png";
-import nora0028 from "@/assets/images/nora/00028.png";
-import nora0029 from "@/assets/images/nora/00029.png";
-import nora0030 from "@/assets/images/nora/00030.png";
-import nora0031 from "@/assets/images/nora/00031.png";
-import nora0032 from "@/assets/images/nora/00032.png";
-import nora0033 from "@/assets/images/nora/00033.png";
-import nora0034 from "@/assets/images/nora/00034.png";
-import nora0035 from "@/assets/images/nora/00035.png";
-import nora0036 from "@/assets/images/nora/00036.png";
-
 type BeastProfile = {
   slug: string;
   name: string;
@@ -181,44 +144,10 @@ const beasts: BeastProfile[] = [
   },
 ];
 
-const noraFrames = [
-  nora0001,
-  nora0002,
-  nora0003,
-  nora0004,
-  nora0005,
-  nora0006,
-  nora0007,
-  nora0008,
-  nora0009,
-  nora0010,
-  nora0011,
-  nora0012,
-  nora0013,
-  nora0014,
-  nora0015,
-  nora0016,
-  nora0017,
-  nora0018,
-  nora0019,
-  nora0020,
-  nora0021,
-  nora0022,
-  nora0023,
-  nora0024,
-  nora0025,
-  nora0026,
-  nora0027,
-  nora0028,
-  nora0029,
-  nora0030,
-  nora0031,
-  nora0032,
-  nora0033,
-  nora0034,
-  nora0035,
-  nora0036,
-];
+const noraFrames = Array.from({ length: 36 }, (_, index) => {
+  const frame = String(index + 1).padStart(index + 1 < 10 ? 4 : 5, "0");
+  return `/images/nora/${frame}.png`;
+});
 
 function nextIndex(value: number, offset: number) {
   return (value + offset + beasts.length) % beasts.length;

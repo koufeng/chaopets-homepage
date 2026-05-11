@@ -148,6 +148,7 @@ const noraFrames = Array.from({ length: 36 }, (_, index) => {
   const frame = String(index + 1).padStart(index + 1 < 10 ? 4 : 5, "0");
   return `/images/nora/${frame}.png`;
 });
+const noraFrameIntervalMs = 80;
 
 function nextIndex(value: number, offset: number) {
   return (value + offset + beasts.length) % beasts.length;
@@ -252,22 +253,55 @@ function HomeCarousel({ lang }: { lang: Locale }) {
 function NoraTurntable() {
   const [frame, setFrame] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [framesReady, setFramesReady] = useState(false);
   const drag = useRef({ active: false, x: 0, moved: false });
+  const preloadedFrames = useRef<HTMLImageElement[]>([]);
 
   useEffect(() => {
-    if (paused) return;
-    const timer = window.setInterval(() => setFrame((value) => (value + 1) % noraFrames.length), 80);
+    let cancelled = false;
+    const images = noraFrames.map(() => new window.Image());
+    preloadedFrames.current = images;
+
+    const preloaders = images.map((img, index) => (
+      new Promise<void>((resolve) => {
+        img.decoding = "async";
+        img.onload = () => {
+          if (typeof img.decode === "function") {
+            void img.decode().catch(() => undefined).finally(resolve);
+            return;
+          }
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = noraFrames[index];
+      })
+    ));
+
+    void Promise.all(preloaders).then(() => {
+      if (!cancelled) setFramesReady(true);
+    });
+
+    return () => {
+      cancelled = true;
+      preloadedFrames.current = [];
+    };
+  }, []);
+
+  useEffect(() => {
+    if (paused || !framesReady) return;
+    const timer = window.setInterval(() => setFrame((value) => (value + 1) % noraFrames.length), noraFrameIntervalMs);
     return () => window.clearInterval(timer);
-  }, [paused]);
+  }, [paused, framesReady]);
 
   const onPointerDown = (event: PointerEvent<HTMLButtonElement>) => {
+    if (!framesReady) return;
     drag.current = { active: true, x: event.clientX, moved: false };
     event.currentTarget.setPointerCapture(event.pointerId);
     setPaused(true);
   };
 
   const onPointerMove = (event: PointerEvent<HTMLButtonElement>) => {
-    if (!drag.current.active) return;
+    if (!framesReady || !drag.current.active) return;
     const delta = event.clientX - drag.current.x;
     if (Math.abs(delta) < 8) return;
     drag.current = { active: true, x: event.clientX, moved: true };
@@ -275,6 +309,7 @@ function NoraTurntable() {
   };
 
   const onPointerUp = (event: PointerEvent<HTMLButtonElement>) => {
+    if (!framesReady) return;
     if (!drag.current.moved) {
       setFrame((value) => (value + 1) % noraFrames.length);
     }
@@ -287,13 +322,22 @@ function NoraTurntable() {
       type="button"
       className="wx-turntable"
       aria-label="拖拽或点击旋转 Nora"
+      aria-busy={!framesReady}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
     >
-      <Image src={noraFrames[frame]} alt="360 portrait of Nora" width={500} height={500} priority={false} />
+      <img
+        src={noraFrames[frame]}
+        alt="360 portrait of Nora"
+        width={500}
+        height={500}
+        decoding="async"
+        loading="eager"
+        draggable={false}
+      />
     </button>
   );
 }

@@ -2,7 +2,7 @@
 
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties, PointerEvent } from "react";
 import type { Locale } from "@/i18n/types";
 import { localizedPath } from "@/i18n";
@@ -156,17 +156,67 @@ function nextIndex(value: number, offset: number) {
 
 function HomeCarousel({ lang }: { lang: Locale }) {
   const [active, setActive] = useState(7);
+  const [exiting, setExiting] = useState<number | null>(null);
+  const [heroImagesReady, setHeroImagesReady] = useState(false);
+  const exitTimer = useRef<number | null>(null);
   const current = beasts[active];
   const preview = [1, 2].map((offset) => beasts[nextIndex(active, offset)]);
   const vars = {
     "--hero-a": current.gradient[0],
     "--hero-b": current.gradient[1],
   } as CSSProperties;
+  const moveToNext = useCallback((resolveNext: (value: number) => number) => {
+    if (!heroImagesReady) return;
+
+    setActive((value) => {
+      const next = resolveNext(value);
+      if (next === value) return value;
+
+      setExiting(value);
+      if (exitTimer.current) window.clearTimeout(exitTimer.current);
+      exitTimer.current = window.setTimeout(() => setExiting(null), 1180);
+      return next;
+    });
+  }, [heroImagesReady]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setActive((value) => nextIndex(value, 1)), 7800);
-    return () => window.clearInterval(timer);
+    let cancelled = false;
+    const preloaders = beasts.map((beast) => (
+      new Promise<void>((resolve) => {
+        const img = new window.Image();
+        const settle = () => {
+          if (typeof img.decode === "function") {
+            void img.decode().catch(() => undefined).finally(resolve);
+            return;
+          }
+          resolve();
+        };
+
+        img.decoding = "async";
+        img.onload = settle;
+        img.onerror = () => resolve();
+        img.src = beast.image.src;
+        if (img.complete) settle();
+      })
+    ));
+
+    void Promise.all(preloaders).then(() => {
+      if (!cancelled) setHeroImagesReady(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  useEffect(() => {
+    if (!heroImagesReady) return;
+    const timer = window.setInterval(() => moveToNext((value) => nextIndex(value, 1)), 7800);
+    return () => {
+      window.clearInterval(timer);
+      if (exitTimer.current) window.clearTimeout(exitTimer.current);
+    };
+  }, [heroImagesReady, moveToNext]);
 
   return (
     <section className="wx-hero" style={vars} aria-label="Wuxing Beasts banner">
@@ -182,6 +232,31 @@ function HomeCarousel({ lang }: { lang: Locale }) {
           <a href="#world">共鸣</a>
         </nav>
       </header>
+
+      <div className="wx-pet-stack" aria-hidden="true">
+        {beasts.map((beast, index) => (
+          <div
+            key={beast.slug}
+            className={index === active ? "is-active" : index === exiting ? "is-exiting" : ""}
+          >
+            <Image
+              src={beast.image}
+              alt=""
+              width={1000}
+              height={1000}
+              sizes="(max-width: 900px) 100vw, 72vw"
+              priority={beast.slug === "hundun"}
+              loading={beast.slug === "hundun" ? undefined : "eager"}
+            />
+          </div>
+        ))}
+      </div>
+
+      <article key={`${current.slug}-info`} className="wx-current-info">
+        <span>№ {current.number}</span>
+        <h2>{current.zhName}</h2>
+        <p>{current.element}</p>
+      </article>
 
       <div className="wx-hero-grid">
         <div className="wx-hero-copy">
@@ -209,25 +284,6 @@ function HomeCarousel({ lang }: { lang: Locale }) {
           <div className="wx-hero-name-mask">
             <div key={current.slug} className="wx-hero-name">{current.name}</div>
           </div>
-          <div className="wx-pet-stack">
-            {beasts.map((beast) => (
-              <Image
-                key={beast.slug}
-                src={beast.image}
-                alt={beast.name}
-                width={1000}
-                height={1000}
-                className={beast.slug === current.slug ? "is-active" : ""}
-                priority={beast.slug === "hundun"}
-              />
-            ))}
-          </div>
-
-          <article key={`${current.slug}-info`} className="wx-current-info">
-            <span>№ {current.number}</span>
-            <h2>{current.zhName}</h2>
-            <p>{current.element}</p>
-          </article>
 
           <div className="wx-card-rail" aria-label="Pet carousel controls">
             {preview.map((beast, index) => (
@@ -236,7 +292,7 @@ function HomeCarousel({ lang }: { lang: Locale }) {
                 type="button"
                 className="wx-hero-card"
                 style={{ "--card-a": beast.gradient[0], "--card-b": beast.gradient[1] } as CSSProperties}
-                onClick={() => setActive((value) => nextIndex(value, 1))}
+                onClick={() => moveToNext((value) => nextIndex(value, 1))}
               >
                 <span>{beast.name}</span>
                 <Image src={beast.image} alt="" width={220} height={220} />

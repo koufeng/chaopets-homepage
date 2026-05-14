@@ -63,7 +63,7 @@ pnpm gen:assets       # 重新生成 PWA 图标 + OG 卡
 ## 应避免的反模式
 
 - 不要写 `astro check` 之外的额外 lint / format 工具，没必要
-- 不要把 PNG 重新搬回 `images/`，那个目录是 raw 备份，构建不读
+- 不要重新引入顶层 `images/` raw 备份目录，构建不读取它
 - 不要给 `.fade-up` 元素加 `style="opacity:1"` 来"修"它，那是渐进增强机制，必须保留 IO + `.js` 选择器结构
 - 不要在 `src/pages/*` 之外创建新顶级路由（Astro 文件路由）
 - 不要在前端 bundle 里塞密钥（`PUBLIC_*` 前缀的 env 会被打包到客户端）

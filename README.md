@@ -58,7 +58,6 @@ pnpm gen:assets
 .
 ├── docs/                       # 设计文档（产品/品牌方维护）
 │   └── 官网设计构思.md
-├── images/                     # 原始 IP 资产（中文文件名）— 仅作备份，构建不读取
 ├── public/                     # 静态文件（直接 copy 到 dist/）
 │   ├── favicon.svg
 │   ├── icons/                  # PWA 图标（脚本生成）

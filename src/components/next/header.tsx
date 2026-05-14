@@ -16,7 +16,7 @@ export function Header({ lang, current = "" }: { lang: Locale; current?: string 
   const links = [
     { id: "home", href: localizedPath("/", lang), label: t.nav.home },
     { id: "origin", href: localizedPath("/origin", lang), label: t.nav.origin },
-    { id: "beasts", href: localizedPath("/beasts", lang), label: t.nav.beasts },
+    { id: "archive", href: localizedPath("/archive", lang), label: t.nav.beasts },
     { id: "series", href: localizedPath("/series", lang), label: t.nav.series },
   ];
   const switchTargets = LOCALES.map((l) => ({

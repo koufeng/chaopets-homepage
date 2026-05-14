@@ -1,6 +1,33 @@
 @import "tailwindcss";
 @import "./astro-migrated.css";
 @import "./home-redesign.css";
+@import "./archive.css";
+
+@font-face {
+  font-family: "Fraunces";
+  src: url("../assets/fonts/Fraunces-VariableFont.ttf") format("truetype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 300 900;
+}
+
+@font-face {
+  font-family: "Fraunces";
+  src: url("../assets/fonts/Fraunces-Italic.ttf") format("truetype");
+  font-display: swap;
+  font-style: italic;
+  font-weight: 300 900;
+}
+
+@font-face {
+  font-family: "Noto Serif SC";
+  src:
+    url("../assets/fonts/NotoSerifSC.woff2") format("woff2"),
+    url("../assets/fonts/NotoSerifSC.ttf") format("truetype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 200 900;
+}
 
 @theme {
   /* 五行 base palette */
@@ -27,9 +54,11 @@
   --color-stone: #b5ac9c;
 
   /* fonts */
-  --font-sans: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
-  --font-serif: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
-  --font-display: "Cormorant Garamond", "Noto Serif SC", "Songti SC", serif;
+  --font-sans: "PingFang SC", "Noto Sans SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --font-serif: "PingFang SC", "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
+  --font-serif-sc: "Noto Serif SC", "PingFang SC", "Songti SC", "STSong", "SimSun", serif;
+  --font-display: "Fraunces", "PingFang SC", "Noto Serif SC", serif;
+  --font-display-italic: "Fraunces", "PingFang SC", "Noto Serif SC", serif;
 
   /* radii */
   --radius-soft: 1.25rem;

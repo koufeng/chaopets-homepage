@@ -3,13 +3,12 @@
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { CSSProperties, PointerEvent } from "react";
+import type { CSSProperties } from "react";
 import type { Locale } from "@/i18n/types";
 import { localizedPath } from "@/i18n";
 import { PageShell } from "@/components/next/page-shell";
+import { WxSiteFooter, WxSiteHeader } from "@/components/next/wx-site-chrome";
 
-import logoBlack from "@/assets/images/logo-black.png";
-import logoWhite from "@/assets/images/logo-white.png";
 import bannerNivi from "@/assets/images/banner-nivi.png";
 import bannerSuki from "@/assets/images/banner-suki.png";
 import bannerGoya from "@/assets/images/banner-goya.png";
@@ -18,7 +17,7 @@ import bannerNora from "@/assets/images/banner-nora.png";
 import bannerXuan from "@/assets/images/banner-xuan.png";
 import bannerYao from "@/assets/images/banner-yao.png";
 import bannerHundun from "@/assets/images/banner-hundun.png";
-import boothNoraBg from "@/assets/images/booth-nora-bg.png";
+import gulingBg from "@/assets/images/guling-bg.png";
 import packaging from "@/assets/images/packaging.png";
 import phone1 from "@/assets/images/phone-1.png";
 import phone2 from "@/assets/images/phone-2.png";
@@ -30,6 +29,8 @@ type BeastProfile = {
   number: string;
   element: string;
   mood: string;
+  archiveElement: string;
+  archiveMood: string;
   role: string;
   intro: string;
   gradient: [string, string];
@@ -45,6 +46,8 @@ const beasts: BeastProfile[] = [
     number: "001",
     element: "METAL · 金",
     mood: "锋芒未藏",
+    archiveElement: "JIN · 金",
+    archiveMood: "锋芒未藏",
     role: "Bright edge",
     intro: "一寸光，一寸锋。它把判断力藏进柔软毛绒里，只在必要时发出清亮的回响。",
     gradient: ["#F7E3B4", "#F4BEBB"],
@@ -58,6 +61,8 @@ const beasts: BeastProfile[] = [
     number: "002",
     element: "WOOD · 木",
     mood: "慢慢复原",
+    archiveElement: "MU · 木",
+    archiveMood: "慢慢长好",
     role: "Quiet growth",
     intro: "春不语，自有花来。Suki 总在细小处生长，把被忽略的心情重新扶正。",
     gradient: ["#B2E9CC", "#BBCEF4"],
@@ -71,6 +76,8 @@ const beasts: BeastProfile[] = [
     number: "003",
     element: "WATER · 水",
     mood: "情绪共振",
+    archiveElement: "SHUI · 水",
+    archiveMood: "温柔但有边界",
     role: "Soft tide",
     intro: "它不替你哭，只让你流。Goya 靠近所有冷暖，把情绪整理成透明潮汐。",
     gradient: ["#ADE3F5", "#D9CFFF"],
@@ -84,10 +91,12 @@ const beasts: BeastProfile[] = [
     number: "004",
     element: "FIRE · 火",
     mood: "明亮热望",
+    archiveElement: "HUO · 火",
+    archiveMood: "燃，但不烧自己",
     role: "One bright second",
     intro: "哪怕只有一秒，也要明亮地烧。Yellen 讨厌冷场，也最懂被看见的勇气。",
     gradient: ["#A0B5F8", "#F7BFDA"],
-    archiveBg: "#FFEEEE",
+    archiveBg: "#FEE",
     image: bannerYellen,
   },
   {
@@ -97,6 +106,8 @@ const beasts: BeastProfile[] = [
     number: "005",
     element: "EARTH · 土",
     mood: "稳，不慌",
+    archiveElement: "TU · 土",
+    archiveMood: "稳，不慌",
     role: "Grounded keeper",
     intro: "慢一点没事，山也是这样长起来的。Nora 把日子重新种回土里。",
     gradient: ["#E9CCB2", "#F4BBBB"],
@@ -110,6 +121,8 @@ const beasts: BeastProfile[] = [
     number: "006",
     element: "YIN · 阴",
     mood: "静谧守夜",
+    archiveElement: "YIN · 阴",
+    archiveMood: "特殊形态 · 静谧守夜",
     role: "Inward night",
     intro: "夜很深，但夜也很懂。Xuan 在灯灭之处出现，听见你最里面的话。",
     gradient: ["#D9DCED", "#B7A3CC"],
@@ -123,6 +136,8 @@ const beasts: BeastProfile[] = [
     number: "007",
     element: "YANG · 阳",
     mood: "烈日高歌",
+    archiveElement: "YANG · 阳",
+    archiveMood: "特殊形态 · 烈日高歌",
     role: "Sunlit signal",
     intro: "我为你掀开云。Yao 把心里的好天气照出来，也让别人被看见。",
     gradient: ["#D5E7D4", "#A3B5CC"],
@@ -136,6 +151,8 @@ const beasts: BeastProfile[] = [
     number: "008",
     element: "VOID · 混沌",
     mood: "五行归一",
+    archiveElement: "HUNDUN · 混沌",
+    archiveMood: "隐藏款 · 五行归一",
     role: "Hidden contract",
     intro: "一切边界尚未命名时，Hundun 已经醒来。它保存混乱，也保存可能。",
     gradient: ["#E0DDD7", "#B9B4C1"],
@@ -144,11 +161,7 @@ const beasts: BeastProfile[] = [
   },
 ];
 
-const noraFrames = Array.from({ length: 36 }, (_, index) => {
-  const frame = String(index + 1).padStart(index + 1 < 10 ? 4 : 5, "0");
-  return `/images/nora/${frame}.png`;
-});
-const noraFrameIntervalMs = 80;
+const heroAutoplayMs = 5460;
 
 function nextIndex(value: number, offset: number) {
   return (value + offset + beasts.length) % beasts.length;
@@ -211,7 +224,7 @@ function HomeCarousel({ lang }: { lang: Locale }) {
 
   useEffect(() => {
     if (!heroImagesReady) return;
-    const timer = window.setInterval(() => moveToNext((value) => nextIndex(value, 1)), 7800);
+    const timer = window.setInterval(() => moveToNext((value) => nextIndex(value, 1)), heroAutoplayMs);
     return () => {
       window.clearInterval(timer);
       if (exitTimer.current) window.clearTimeout(exitTimer.current);
@@ -220,18 +233,7 @@ function HomeCarousel({ lang }: { lang: Locale }) {
 
   return (
     <section className="wx-hero" style={vars} aria-label="Wuxing Beasts banner">
-      <header className="wx-header">
-        <Link className="wx-logo-link" href={localizedPath("/", lang)} aria-label="五行小兽首页">
-          <Image src={logoBlack} alt="Wuxing Beasts" width={100} height={41} priority />
-        </Link>
-        <nav className="wx-nav" aria-label="Main">
-          <a href="#origin">起源</a>
-          <a href="#archive">档案馆</a>
-          <a href="#portrait">灵兽志</a>
-          <a href="#reborn">抽盒</a>
-          <a href="#world">共鸣</a>
-        </nav>
-      </header>
+      <WxSiteHeader lang={lang} home />
 
       <div className="wx-pet-stack" aria-hidden="true">
         {beasts.map((beast, index) => (
@@ -251,12 +253,6 @@ function HomeCarousel({ lang }: { lang: Locale }) {
           </div>
         ))}
       </div>
-
-      <article key={`${current.slug}-info`} className="wx-current-info">
-        <span>№ {current.number}</span>
-        <h2>{current.zhName}</h2>
-        <p>{current.element}</p>
-      </article>
 
       <div className="wx-hero-grid">
         <div className="wx-hero-copy">
@@ -306,95 +302,81 @@ function HomeCarousel({ lang }: { lang: Locale }) {
   );
 }
 
-function NoraTurntable() {
-  const [frame, setFrame] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const [framesReady, setFramesReady] = useState(false);
-  const drag = useRef({ active: false, x: 0, moved: false });
-  const preloadedFrames = useRef<HTMLImageElement[]>([]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const images = noraFrames.map(() => new window.Image());
-    preloadedFrames.current = images;
-
-    const preloaders = images.map((img, index) => (
-      new Promise<void>((resolve) => {
-        img.decoding = "async";
-        img.onload = () => {
-          if (typeof img.decode === "function") {
-            void img.decode().catch(() => undefined).finally(resolve);
-            return;
-          }
-          resolve();
-        };
-        img.onerror = () => resolve();
-        img.src = noraFrames[index];
-      })
-    ));
-
-    void Promise.all(preloaders).then(() => {
-      if (!cancelled) setFramesReady(true);
-    });
-
-    return () => {
-      cancelled = true;
-      preloadedFrames.current = [];
-    };
-  }, []);
-
-  useEffect(() => {
-    if (paused || !framesReady) return;
-    const timer = window.setInterval(() => setFrame((value) => (value + 1) % noraFrames.length), noraFrameIntervalMs);
-    return () => window.clearInterval(timer);
-  }, [paused, framesReady]);
-
-  const onPointerDown = (event: PointerEvent<HTMLButtonElement>) => {
-    if (!framesReady) return;
-    drag.current = { active: true, x: event.clientX, moved: false };
-    event.currentTarget.setPointerCapture(event.pointerId);
-    setPaused(true);
-  };
-
-  const onPointerMove = (event: PointerEvent<HTMLButtonElement>) => {
-    if (!framesReady || !drag.current.active) return;
-    const delta = event.clientX - drag.current.x;
-    if (Math.abs(delta) < 8) return;
-    drag.current = { active: true, x: event.clientX, moved: true };
-    setFrame((value) => (value + (delta > 0 ? -1 : 1) + noraFrames.length) % noraFrames.length);
-  };
-
-  const onPointerUp = (event: PointerEvent<HTMLButtonElement>) => {
-    if (!framesReady) return;
-    if (!drag.current.moved) {
-      setFrame((value) => (value + 1) % noraFrames.length);
-    }
-    drag.current.active = false;
-    event.currentTarget.releasePointerCapture(event.pointerId);
-  };
+function CharacterArchive({ lang }: { lang: Locale }) {
+  const [activeIndex, setActiveIndex] = useState(3);
+  const active = beasts[activeIndex];
+  const vars = {
+    "--archive-a": active.gradient[0],
+    "--archive-b": active.gradient[1],
+    "--archive-surface": active.archiveBg,
+  } as CSSProperties;
 
   return (
-    <button
-      type="button"
-      className="wx-turntable"
-      aria-label="拖拽或点击旋转 Nora"
-      aria-busy={!framesReady}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-    >
-      <img
-        src={noraFrames[frame]}
-        alt="360 portrait of Nora"
-        width={500}
-        height={500}
-        decoding="async"
-        loading="eager"
-        draggable={false}
-      />
-    </button>
+    <section id="archive" className="wx-archive" style={vars}>
+      <div className="wx-section-inner">
+        <div className="wx-archive-heading">
+          <div>
+            <p className="wx-kicker wx-kicker-line">03 — ARCHIVE</p>
+            <h2>
+              <span>角色档案馆</span>
+              <span>
+                <em>Eight</em> beasts, eight emotions.
+              </span>
+            </h2>
+          </div>
+          <p>
+            五元素本体 + 阴 / 阳 / 混沌三特殊形态。每只灵兽对应一种核心情绪，
+            <mark>点击进入档案馆</mark>查看完整故事碎片、声音彩蛋与可解锁动态壁纸。
+          </p>
+        </div>
+
+        <div className="wx-archive-showcase">
+          <article className="wx-archive-feature" aria-live="polite">
+            <div className="wx-archive-feature-top">
+              <span>№ {active.number}</span>
+              <em>{active.archiveElement}</em>
+            </div>
+            <div key={`${active.slug}-image`} className="wx-archive-feature-image">
+              <Image
+                src={active.image}
+                alt={active.name}
+                width={820}
+                height={820}
+                sizes="(max-width: 900px) 90vw, 48vw"
+              />
+            </div>
+            <div key={`${active.slug}-copy`} className="wx-archive-feature-copy">
+              <h3>{active.zhName}</h3>
+              <strong>{active.name}</strong>
+              <span>情绪 · {active.archiveMood}</span>
+              <Link href={`${localizedPath("/archive", lang)}?beast=${active.slug}`}>查看详情 →</Link>
+            </div>
+          </article>
+
+          <div className="wx-archive-picker" aria-label="选择角色">
+            {beasts.map((beast, index) => (
+              <button
+                key={beast.slug}
+                type="button"
+                className={index === activeIndex ? "is-active" : ""}
+                style={{
+                  "--archive-card-bg": beast.archiveBg,
+                } as CSSProperties}
+                aria-pressed={index === activeIndex}
+                onClick={() => setActiveIndex(index)}
+              >
+                <span>№ {beast.number}</span>
+                <em>{beast.archiveElement}</em>
+                <Image src={beast.image} alt="" width={260} height={260} />
+                <strong>{beast.zhName}</strong>
+                <b>{beast.name}</b>
+                <small>情绪 · {beast.archiveMood}</small>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -407,77 +389,102 @@ export function HomeView({ lang }: { lang: Locale }) {
         <HomeCarousel lang={lang} />
 
         <section id="origin" className="wx-origin">
-          <div className="wx-section-inner wx-origin-grid">
-            <div>
-              <p className="wx-kicker">ORIGIN · 起源</p>
-              <h2>起源</h2>
-              <p>
-                天地初分，五行生息。小兽并非被召唤而来，它们原本就藏在人的情绪、时间与物件之间。
-                当某个心愿足够清晰，契约便会亮起。
-              </p>
-              <a className="wx-text-link" href="#archive">Meet all eight</a>
-            </div>
-            <div className="wx-origin-note">
-              <span>Wuxing spirits wake where daily life brushes against myth.</span>
-            </div>
-          </div>
-        </section>
-
-        <section id="archive" className="wx-archive">
           <div className="wx-section-inner">
-            <p className="wx-kicker">CHARACTER ARCHIVE</p>
-            <h2>角色档案馆</h2>
-            <div className="wx-archive-grid">
-              {beasts.map((beast) => (
-                <article key={beast.slug} className="wx-archive-card" style={{ background: beast.archiveBg }}>
-                  <span>№ {beast.number}</span>
-                  <em>{beast.element}</em>
-                  <Image src={beast.image} alt={beast.name} width={420} height={420} />
-                  <h3>{beast.zhName}</h3>
-                  <p>{beast.name}</p>
-                  <small>情绪 · {beast.mood}</small>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="portrait" className="wx-portrait">
-          <div className="wx-portrait-media">
-            <Image src={boothNoraBg} alt="" fill sizes="(max-width: 900px) 100vw, 50vw" />
-            <NoraTurntable />
-          </div>
-          <div className="wx-portrait-copy">
-            <p className="wx-kicker">SPOTLIGHT · № 005</p>
-            <h2>
-              360° portrait of <span>Yellen</span>.
-            </h2>
-            <h3>土 土</h3>
-            <p>
-              这一屏保留设计稿标题，同时使用 Nora 的展台背景与序列帧资源。默认自动旋转，鼠标移入暂停，拖拽或点击即可手动播放帧序列。
-            </p>
-            <div className="wx-detail-row">
-              <span><b>ELEMENT</b>土 · 承载</span>
-              <span><b>EMOTION</b>稳，不慌</span>
-              <span><b>SOUND</b>轻软呼吸</span>
-            </div>
-          </div>
-        </section>
-
-        <section id="reborn" className="wx-reborn">
-          <div className="wx-section-inner wx-reborn-grid">
-            <div>
-              <p className="wx-kicker">VINYL MINI FIGURE</p>
-              <h2>古灵新生</h2>
-              <p>
-                The ritual of summoning, now pocket-sized. 每一次开盒，都是一次与五行情绪重新缔约。
+            <div className="wx-origin-head">
+              <div className="wx-origin-title">
+                <p className="wx-kicker wx-kicker-line">02 — ORIGIN</p>
+                <h2>
+                  <span>起源</span>
+                  <span>
+                    之 <em>Genesis</em>
+                  </span>
+                </h2>
+              </div>
+              <p className="wx-origin-intro">
+                五行小兽并非宠物，而是<mark>"元素精灵"</mark>——它们体型娇小，毛茸柔软，
+                却各自承载着五行之力的本源。山海集联合古谱学者解封图鉴，让这群跨越千年的精灵，重新走入人间。
               </p>
-              <div className="wx-hero-actions">
-                <a href={lulumartUrl} target="_blank" rel="noopener">前往抽盒</a>
-                <Link href={localizedPath("/series", lang)}>系列详情</Link>
+            </div>
+
+            <div className="wx-origin-grid">
+              <div className="wx-origin-myth">
+                <p className="wx-origin-scroll">古谱卷一 · 第〇页</p>
+                <h3>
+                  天地初分，五行化生。<br />
+                  每当星轨交错、<mark>灵脉震颤</mark>之时，藏匿于五行之间的小兽便会苏醒，
+                  附着于人类的法阵之中，<mark>与命运缔结契约</mark>。
+                </h3>
+                <blockquote>
+                  <p>"唤之以诚，则灵兽现身。"</p>
+                  <cite>— 山海集 · 古谱学者</cite>
+                </blockquote>
+              </div>
+
+              <div className="wx-origin-story">
+                <p>
+                  本系列由五只对应五行的元素小兽与三只特殊形态构成，每一只都是<mark>一种当代年轻人核心情绪</mark>的具象映射。
+                  它们不替你解决问题，但替你把那种说不出口的状态，安静地接住。
+                </p>
+                <p>
+                  每只小兽的造型融合了中国古代神兽基因与当代潮流美学：既保留瑞兽的瞳形与脊纹，
+                  也带着 Z 世代喜爱的萌系比例与微表情。既有文化根基，又是世界通用的视觉语言。
+                </p>
+                <p>
+                  除盲盒摆件之外，五行小兽 IP 还规划了 AI 陪伴宠物、互动漫剧、桌面与车载场景配件，
+                  构建一个能够持续生长的、立体的灵兽生态。
+                </p>
+                <div className="wx-origin-signature" aria-label="山海集原创发行">
+                  <strong>山海集</strong>
+                  <span>由山海集原创发行</span>
+                  <small>ORIGINAL IP · LULUMART × SHANHAIJI<br />自 2026 年春 · 持续生长</small>
+                </div>
               </div>
             </div>
-            <Image src={packaging} alt="Wuxing Beasts packaging" width={631} height={694} />
+          </div>
+        </section>
+
+        <CharacterArchive lang={lang} />
+
+        <section
+          id="reborn"
+          className="wx-reborn"
+          style={{ "--reborn-bg": `url(${gulingBg.src})` } as CSSProperties}
+        >
+          <div className="wx-section-inner wx-reborn-grid">
+            <div className="wx-reborn-copy">
+              <p className="wx-reborn-kicker">
+                <span aria-hidden="true" />
+                05 — RITUAL 拆盒之仪
+              </p>
+              <h2>
+                <span>古灵新生</span>
+                <span>
+                  The <em>ritual</em> of
+                </span>
+                <span>summoning.</span>
+              </h2>
+              <p className="wx-reborn-text">
+                每一只五行小兽都封存于一个朱砂盒中。摇一摇、称一称、透着光看一眼剪影——
+                线下盲盒的所有惊喜瞬间，都会在 lulumart.app 中完整复刻。SSR 隐藏款拆开时，
+                全屏会爆发对应五行的光芒，伴随古谱中的真名共鸣。
+              </p>
+              <div className="wx-reborn-actions">
+                <a href={lulumartUrl} target="_blank" rel="noopener" data-event="reborn_lulumart_outlink">
+                  <span>前往 lulumart.app</span>
+                  <i aria-hidden="true">→</i>
+                </a>
+                <Link href={localizedPath("/series", lang)}>古灵新生 · 系列介绍</Link>
+              </div>
+            </div>
+            <div className="wx-reborn-art">
+              <Image
+                src={packaging}
+                alt="Wuxing Beasts packaging"
+                width={631}
+                height={694}
+                sizes="(max-width: 900px) 82vw, 46vw"
+              />
+            </div>
           </div>
         </section>
 
@@ -492,44 +499,7 @@ export function HomeView({ lang }: { lang: Locale }) {
           </div>
         </section>
 
-        <footer id="footer" className="wx-footer">
-          <div className="wx-footer-main">
-            <div className="wx-footer-brand">
-              <Image src={logoWhite} alt="Wuxing Beasts" width={100} height={41} />
-              <p>一座能呼吸的东方奇幻数字藏馆。山海集 © 2026 — 持续生长中。</p>
-            </div>
-
-            <nav className="wx-footer-nav" aria-label="Footer">
-              <div>
-                <h3>NAVIGATE 探索</h3>
-                <a href="#origin">起源故事</a>
-                <a href="#archive">角色档案馆</a>
-                <a href="#portrait">灵兽志</a>
-                <a href="#reborn">古灵新生</a>
-              </div>
-              <div>
-                <h3>COMMUNITY 共鸣</h3>
-                <a href="https://www.xiaohongshu.com/" target="_blank" rel="noopener">小红书 @五行小兽</a>
-                <a href="https://weibo.com/" target="_blank" rel="noopener">微博 @山海集</a>
-                <a href="https://www.douyin.com/" target="_blank" rel="noopener">抖音 @wuxingbeasts</a>
-                <a href="https://discord.com/" target="_blank" rel="noopener">Discord</a>
-              </div>
-              <div>
-                <h3>OFFICIAL 官方</h3>
-                <a href={lulumartUrl} target="_blank" rel="noopener">lulumart.app · 抽盒</a>
-                <a href="mailto:dev@wuxing-beasts.com">开发者支持</a>
-                <a href="mailto:bd@wuxing-beasts.com">合作 · BD</a>
-                <a href="#privacy">隐私 · 条款</a>
-              </div>
-            </nav>
-          </div>
-
-          <div className="wx-footer-bottom">
-            <span>© 2026 SHANHAIJI · 山海集</span>
-            <span>WǓ XÍNG BEASTS · ALL EIGHT BEASTS, ALL CONTRACTS HONORED.</span>
-            <span>v 1.0 · MAY 2026</span>
-          </div>
-        </footer>
+        <WxSiteFooter lang={lang} lulumartUrl={lulumartUrl} />
       </div>
     </PageShell>
   );

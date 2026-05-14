@@ -32,7 +32,7 @@ export function Footer({ lang }: { lang: Locale }) {
             <ul>
               <li><Link href={localizedPath("/", lang)}>{t.footer.homeLink}</Link></li>
               <li><Link href={localizedPath("/origin", lang)}>{t.footer.originLink}</Link></li>
-              <li><Link href={localizedPath("/beasts", lang)}>{t.footer.beastsLink}</Link></li>
+              <li><Link href={localizedPath("/archive", lang)}>{t.footer.beastsLink}</Link></li>
               <li><Link href={localizedPath("/series", lang)}>{t.footer.seriesLink}</Link></li>
             </ul>
           </div>
